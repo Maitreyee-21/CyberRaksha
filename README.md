@@ -15,7 +15,7 @@ CyberRaksha/
 │   │   ├── api/
 │   │   ├── core/
 │   │   ├── scam_db/
-│   │   ├── security/          # Member 4 — Security & Prevention Layer
+│   │   ├── security/         
 │   │   └── services/
 │   └── tests/
 ├── frontend/                  # Next.js application
@@ -39,7 +39,7 @@ The project configures these IBM Granite targets:
 
 Only verified live watsonx calls are labeled **IBM Granite Live** in the UI.
 
-## Member 4 security layer
+##  security layer
 
 The security layer is integrated into the main FastAPI + Next.js project. It provides:
 
@@ -75,7 +75,7 @@ Frontend default: `http://localhost:3000`
 
 Set `NEXT_PUBLIC_API_URL` if the frontend and backend are hosted separately.
 
-## Test Member 4 security layer
+## Test security layer
 
 From `backend/`:
 
