@@ -18,9 +18,9 @@ CyberRaksha/
 │   │   ├── security/         
 │   │   └── services/
 │   └── tests/
-├── frontend/                  # Next.js application
+├── frontend/                  
 ├── docs/
-│   ├── MEMBER_4_SECURITY_INTEGRATION.md
+│   ├── SECURITY_INTEGRATION.md
 │   ├── SECURITY_REVIEW.md
 │   ├── MODEL_STACK_STATUS.md
 │   ├── CyberRaksha_Hackathon_Project_Report.pdf
