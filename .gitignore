@@ -1,0 +1,29 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Node / Next
+node_modules/
+.next/
+out/
+
+# Build
+*.log
+dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

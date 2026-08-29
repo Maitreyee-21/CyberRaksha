@@ -1,0 +1,65 @@
+"docType":"iam.identity-access-map"
+"version":"1.0.0"
+"createdById":"IBMid-6A2000C074"
+"date":"2026-08-28T05:58:44.395Z"
+"fullReport":true
+"displayName":"Irshad Sheikh"
+"contact":"is7714467@gmail.com",,,,,,,
+"Resource","ID","Name","Email","Group Members","Role","Action","Policy IDs"
+"{""crn"":""crn:v1:bluemix:public:pm-20:us-south:a/b3534c875d074b71ae0d4a3ce099e689:ad655dee-712d-417b-b9f5-88fe55dad662::"",
+""displayName"":""watsonx.ai Runtime-pq"",
+""serviceName"":""pm-20"",
+""resourceGroupId"":""c6244481c966463194b707b75b8551ab"",
+""resourceGroupName"":""Default""}","IBMid-6A2000C074","Irshad Sheikh","is7714467@gmail.com",,,"pm-20.instances.write undefined","=HYPERLINK(""http://iam-ui/users/IBMid-6A2000C074/policies/f9cedf99-56d6-400a-ab97-97394813fa4b"",""f9cedf99-56d6-400a-ab97-97394813fa4b"")"
+,,,,,,"pm-20.instances.admin undefined","=HYPERLINK(""http://iam-ui/users/IBMid-6A2000C074/policies/f9cedf99-56d6-400a-ab97-97394813fa4b"",""f9cedf99-56d6-400a-ab97-97394813fa4b"")"
+,,,,,,"global-search-tagging.resource.read undefined
+iam.policy.read undefined
+cbr.rule.read undefined","=HYPERLINK(""http://iam-ui/users/IBMid-6A2000C074/policies/f9cedf99-56d6-400a-ab97-97394813fa4b"",""f9cedf99-56d6-400a-ab97-97394813fa4b"")"
+,,,,,,"resource-controller.key.delete undefined
+cbr.rule.update undefined
+global-search-tagging.resource.read undefined
+iam.policy.update undefined
+resource-controller.instance.create undefined
+resource-controller.key.retrieve undefined
+iam.role.read undefined
+resource-controller.alias.retrieve undefined
+resource-controller.group.retrieve undefined
+cbr.rule.delete undefined
+iam.policy.create undefined
+resource-controller.key.update undefined
+resource-controller.instance.retrieve undefined
+resource-controller.quota.retrieve undefined
+resource-controller.broker.retrieve undefined
+resource-controller.key.create undefined
+resource-controller.subscription.retrieve undefined
+cbr.rule.create undefined
+global-search-tagging.tag.attach-user-tag undefined
+global-search-tagging.tag.attach-access-tag undefined
+iam.delegationPolicy.create undefined
+resource-controller.alias.create undefined
+resource-controller.instance.retrieve_history undefined
+iam.policy.delete undefined
+iam.service.read undefined
+cbr.rule.read undefined
+iam.role.assign undefined
+resource-controller.group.update undefined
+resource-controller.group.delete undefined
+resource-controller.credential.retrieve_all undefined
+resource-controller.instance.update_onetime_credentials_off undefined
+resource-controller.alias.delete undefined
+iam.policy.read undefined
+resource-controller.broker.update undefined
+resource-controller.broker.delete undefined
+resource-controller.binding.update undefined
+global-search-tagging.tag.detach-user-tag undefined
+resource-controller.binding.create undefined
+resource-controller.instance.update undefined
+resource-controller.alias.update undefined
+resource-controller.group.create undefined
+resource-controller.binding.delete undefined
+resource-controller.binding.retrieve undefined
+global-search-tagging.tag.detach-access-tag undefined
+resource-controller.broker.create undefined
+resource-controller.instance.update_plan undefined
+iam.delegationPolicy.update undefined
+resource-controller.instance.delete undefined","=HYPERLINK(""http://iam-ui/users/IBMid-6A2000C074/policies/f9cedf99-56d6-400a-ab97-97394813fa4b"",""f9cedf99-56d6-400a-ab97-97394813fa4b"")"
