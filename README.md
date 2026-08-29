@@ -12,13 +12,23 @@ CyberRaksha follows the safety loop:
 CyberRaksha/
 ├── backend/
 │   ├── app/
-│   │   ├── api/
-│   │   ├── core/
-│   │   ├── scam_db/
-│   │   ├── security/         
-│   │   └── services/
-│   └── tests/
-├── frontend/                  
+│   ├── tests/
+│   ├── .env.example
+│   ├── debug.py
+│   ├── main.py
+│   ├── requirements.txt
+│   └── smoke_test.py
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   ├── next.config.js
+│   ├── next-env.d.ts
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   └── tsconfig.json
 ├── docs/
 │   ├── SECURITY_INTEGRATION.md
 │   ├── SECURITY_REVIEW.md
