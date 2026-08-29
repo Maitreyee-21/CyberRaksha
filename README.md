@@ -92,3 +92,52 @@ ALLOW_REMOTE_URL_FETCH=false
 ```
 
 Do not commit `.env` files or API keys. Use `.env.example` as the template.
+
+
+
+## Contributor — AI Engineer
+
+**Role:** AI Engineer
+**Focus:** IBM watsonx.ai, Granite Models, Scam Analyzer, Scam DNA
+
+### Contribution
+
+I worked on the AI and backend analysis layer of the project, with a focus on integrating IBM Granite models and turning their output into useful scam detection results.
+
+#### IBM Granite Integration
+
+* Integrated **IBM watsonx.ai** with the project backend using the required API credentials, Project ID, and Deployment Space configuration.
+* Integrated **Granite Instruct** for scam classification and message analysis.
+* Added **Granite Guardian** as a safety check for model responses.
+* Resolved IBM Cloud service-association and deployment configuration issues.
+* Tested the complete inference flow with different examples, including RBI impersonation, fake KYC messages, malicious links, OTP fraud, and normal/benign messages.
+
+#### Scam Analyzer
+
+* Built the analysis pipeline used by the `/api/scan` and `/api/scan/form` endpoints.
+* Added support for analyzing **text, URLs, and screenshots**.
+* Converted the analysis results into a **0–100 risk score** with LOW, MEDIUM, and HIGH risk levels.
+* Added support for explanations in **English, Hindi, and Marathi**.
+
+#### Scam DNA
+
+* Developed the structure behind the **Scam DNA** feature.
+* Mapped common scam techniques into individual indicators such as:
+
+  * Urgency
+  * Fear
+  * Impersonation
+  * Suspicious Links
+  * Payment Pressure
+* Structured these indicators so they can be displayed as a radar chart on the frontend.
+* Focused on making the result understandable by showing **why a message was considered suspicious**, rather than only returning a risk score.
+
+### Technologies
+
+* IBM watsonx.ai
+* IBM Granite Instruct
+* IBM Granite Guardian
+* Python
+* FastAPI
+
+
