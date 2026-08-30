@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "id": "usr_1788111990726_47fmj69",
+      "fullName": "Aditya Verma",
+      "email": "aditya_1788111990522@example.com",
+      "username": "aditya_522",
+      "passwordHash": "$2b$10$FDN1AldRA1.qOlzfq55mKeR6Z1DVQ44PKjqrTObijVzmiCU.vQUdS",
+      "createdAt": "2026-08-30T17:46:30.726Z"
+    }
+  ]
+}

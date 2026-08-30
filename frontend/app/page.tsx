@@ -5,58 +5,96 @@ import { LoginScreen } from '@/components/auth/LoginScreen';
 import { LandingPage } from '@/components/home/LandingPage';
 import { ScanApp } from '@/components/scan/ScanApp';
 
-type View = 'login' | 'home' | 'scan';
+type View = 'home' | 'login' | 'scan';
 type Identity = { name: string; guest: boolean };
 
-const SESSION_KEY = 'cyberraksha_session';
-
 export default function RootPage() {
-  // Start with a stable view for the server-rendered/initial client pass,
-  // then hydrate from localStorage once mounted (avoids SSR/client mismatch).
-  const [view, setView] = React.useState<View>('login');
+  const [view, setView] = React.useState<View>('home');
   const [identity, setIdentity] = React.useState<Identity | null>(null);
   const [hydrated, setHydrated] = React.useState(false);
 
+  // Check backend authentication status on initial load
   React.useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(SESSION_KEY);
-      if (raw) {
-        const saved: Identity = JSON.parse(raw);
-        setIdentity(saved);
-        setView('home');
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            setIdentity({ name: data.user.fullName || data.user.username, guest: false });
+            setView('scan');
+          } else {
+            setIdentity(null);
+          }
+        } else {
+          setIdentity(null);
+        }
+      } catch {
+        setIdentity(null);
+      } finally {
+        setHydrated(true);
       }
-    } catch {
-      // ignore corrupt/blocked storage — falls back to login
     }
-    setHydrated(true);
+
+    checkAuth();
   }, []);
 
+  /** Called by LoginScreen after successful credential check. */
   const handleAuthenticated = (newIdentity: Identity) => {
     setIdentity(newIdentity);
+    setView('scan');
+  };
+
+  /** Called by ScanApp logout button. */
+  const handleLogout = async () => {
     try {
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(newIdentity));
+      await fetch('/api/auth/logout', { method: 'POST' });
     } catch {
-      // best-effort demo persistence only
+      // best-effort logout
     }
+    setIdentity(null);
     setView('home');
   };
 
   if (!hydrated) {
-    return <div className="min-h-screen w-full bg-zinc-950" />;
-  }
-
-  if (view === 'login') {
-    return <LoginScreen onAuthenticated={handleAuthenticated} />;
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-zinc-950">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+          <span className="text-xs font-medium text-zinc-400">Loading CyberRaksha...</span>
+        </div>
+      </div>
+    );
   }
 
   if (view === 'home') {
     return (
       <LandingPage
-        userName={identity?.name}
-        onStartScanning={() => setView('scan')}
+        onGoToLogin={() => setView('login')}
+        onRegistered={() => setView('login')}
       />
     );
   }
 
-  return <ScanApp onGoHome={() => setView('home')} />;
+  if (view === 'login') {
+    return (
+      <LoginScreen
+        onAuthenticated={handleAuthenticated}
+        onGoToHome={() => setView('home')}
+      />
+    );
+  }
+
+  // view === 'scan' — protected; identity checked
+  if (!identity) {
+    // If not authenticated, redirect to login
+    return (
+      <LoginScreen
+        onAuthenticated={handleAuthenticated}
+        onGoToHome={() => setView('home')}
+      />
+    );
+  }
+
+  return <ScanApp onLogout={handleLogout} userName={identity.name} />;
 }

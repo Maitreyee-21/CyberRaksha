@@ -9,7 +9,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <title>CyberRaksha — AI Cyber Security Assistant</title>
         <meta name="description" content="Minimal, professional scam detection assistant powered by IBM Granite AI models." />
       </head>
-      <body className="bg-zinc-950 text-zinc-100 antialiased overflow-hidden">
+      <body className="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
         {children}
       </body>
     </html>
