@@ -7,6 +7,7 @@ import { RedFlagsList } from '@/components/analysis/RedFlagsList';
 import { EmergencyAlert } from '@/components/analysis/EmergencyAlert';
 import { SafetyLock } from '@/components/analysis/SafetyLock';
 import { GuidancePanel } from '@/components/analysis/GuidancePanel';
+import { ReportDraft } from '@/components/report/ReportDraft';
 import type { ScanResult } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { DatabaseZap, ShieldCheck } from 'lucide-react';
@@ -146,6 +147,9 @@ export function ResultsPanel({ result, loading, error }: ResultsPanelProps) {
           safetyLock={result.safety_lock}
           summary={result.summary}
         />
+
+        {/* Automated Official Reporting Engine — isolated, self-hides for LOW risk */}
+        <ReportDraft result={result} />
       </div>
     </>
   );

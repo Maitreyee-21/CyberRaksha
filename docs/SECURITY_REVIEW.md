@@ -2,7 +2,7 @@
 
 ## Issues found and addressed
 
-1. **Standalone app was not connected to the real project stack.**
+1. **Standalone Member 4 app was not connected to the real project stack.**
    - Resolved by integrating the security layer into FastAPI and the existing Next.js UI.
 
 2. **Main project had a deterministic safety concept but did not expose a structured URL security evaluation.**
@@ -14,7 +14,7 @@
 4. **Main URL pipeline fetched arbitrary user-supplied pages by default.**
    - Disabled remote fetching by default through `ALLOW_REMOTE_URL_FETCH=false`.
 
-5. **The alert implementation treated any active alert as HIGH visually.**
+5. **The Member 4 alert implementation treated any active alert as HIGH visually.**
    - Corrected in the integrated Next.js alert component so severity is based on the actual risk level/action.
 
 6. **Navigation needed one controlled gateway.**
@@ -36,7 +36,7 @@
 ## Additional fixes in the current revision
 
 8. **Risk thresholds were inconsistent.**
-   - Unified the AI ensemble and policy to MEDIUM >= 40 and HIGH >= 70.
+   - Unified the AI ensemble and Member 4 policy to MEDIUM >= 40 and HIGH >= 70.
 
 9. **The backend CORS policy used a wildcard with credentials enabled.**
    - Replaced it with configurable localhost origins via `CORS_ORIGINS`.
