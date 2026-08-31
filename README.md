@@ -10,7 +10,7 @@
 
 ---
 
-## 📌 Overview
+##  Overview
 
 **CyberRaksha** is an intelligent, multi-layered cybersecurity defense and awareness platform engineered to protect users from pervasive digital scams, phishing campaigns, deceptive URLs, and fraudulent QR/UPI payment schemes. Designed with a particular focus on prevalent Indian cyber fraud vectors (such as RBI/Police impersonation, fake electricity bill disconnections, bank KYC deactivation threats, and deceptive lottery schemes), CyberRaksha operates on a closed-loop security paradigm:
 
@@ -20,7 +20,7 @@ By uniting **IBM Granite 4 foundation models** (via IBM watsonx.ai) with **deter
 
 ---
 
-## 🎯 Problem Statement
+##  Problem Statement
 
 Digital financial fraud and social engineering scams are escalating exponentially:
 * **Sophisticated Social Engineering**: Scammers exploit urgency, fear, and authority impersonation (e.g., CBI/RBI/Customs arrest threats, electricity cutoff warnings) to coerce victims into rapid compliance.
@@ -30,7 +30,7 @@ Digital financial fraud and social engineering scams are escalating exponentiall
 
 ---
 
-## 💡 Solution
+##  Solution
 
 CyberRaksha bridges the gap between AI threat intelligence and deterministic safety enforcement:
 1. **Multi-Modal Input Ingestion**: Analyzes suspicious raw text, suspicious URLs, SMS screenshots, and payment QR codes in a unified scanner.
@@ -54,7 +54,7 @@ CyberRaksha bridges the gap between AI threat intelligence and deterministic saf
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 * **Framework**: [Next.js 14](https://nextjs.org/) (App Router, Server Actions, API Route Handlers)
@@ -87,7 +87,7 @@ CyberRaksha bridges the gap between AI threat intelligence and deterministic saf
 
 ---
 
-## 🏗️ Project Architecture
+##  Project Architecture
 
 ```mermaid
 flowchart TD
@@ -132,7 +132,7 @@ flowchart TD
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 CyberRaksha/
@@ -285,7 +285,7 @@ python smoke_test.py
 
 ---
 
-## 🔐 Environment Variables
+##  Environment Variables
 
 ### Backend Configuration (`backend/.env`)
 
@@ -319,14 +319,14 @@ CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 ---
 
-## 🚀 Usage
+##  Usage
 
 1. **Open the Web Application**: Visit `http://localhost:3000` in your web browser.
 2. **Select Threat Input Mode**:
-   * 📝 **Text**: Paste suspicious SMS, WhatsApp forwards, email contents, or job offers.
-   * 🔗 **URL**: Enter an unknown or suspicious link.
-   * 🖼️ **Screenshot**: Upload an image/screenshot of a message or notification.
-   * 📱 **QR Code**: Upload a payment QR code image or paste decoded `upi://` URI data.
+   *  **Text**: Paste suspicious SMS, WhatsApp forwards, email contents, or job offers.
+   *  **URL**: Enter an unknown or suspicious link.
+   *  **Screenshot**: Upload an image/screenshot of a message or notification.
+   *  **QR Code**: Upload a payment QR code image or paste decoded `upi://` URI data.
 3. **Execute Analysis**: Click **"Analyze Threat"**.
 4. **Review Intelligence Output**:
    * **Risk Score & Badge**: Instant categorization (LOW, MEDIUM, HIGH).
@@ -352,7 +352,7 @@ CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 ---
 
-## 🧠 How It Works
+##  How It Works
 
 ```text
   [User Input] (Text / URL / Image / QR)
@@ -384,7 +384,7 @@ CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 ---
 
-## 🔒 Security Considerations
+##  Security Considerations
 
 * **Deterministic Override Principle**: AI outputs serve as threat advisors, never as unilateral navigation authorizers. If deterministic URL checks detect dangerous indicators (e.g., raw IP hosts, suspicious TLDs, punycode homographs), the link is unconditionally blocked.
 * **No Remote URL Fetching**: Arbitrary remote scraping of user-provided URLs is disabled by default (`ALLOW_REMOTE_URL_FETCH=false`) to prevent server-side request forgery (SSRF) and malicious script execution.
@@ -419,7 +419,7 @@ CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 ---
 
-## 👥 Team & Contributors
+##  Team & Contributors
 
 | Member | Role | Core Contributions |
 | :--- | :--- | :--- |
@@ -431,6 +431,6 @@ CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
