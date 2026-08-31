@@ -1,6 +1,6 @@
-# Member 4 — Security & Prevention Layer
+# Security & Prevention Layer
 
-The original Member 4 prototype was a standalone Vite/Express application. The main CyberRaksha project uses **FastAPI + Next.js**, so the security layer has been integrated into the existing stack instead of adding a second frontend/backend application.
+The original  prototype was a standalone Vite/Express application. The main CyberRaksha project uses **FastAPI + Next.js**, so the security layer has been integrated into the existing stack instead of adding a second frontend/backend application.
 
 ## Integrated backend
 
@@ -66,9 +66,9 @@ This avoids making the server automatically request arbitrary user-supplied dest
 
 ## Existing-file integration
 
-- The main project already had `frontend/components/analysis/SafetyLock.tsx` and `EmergencyAlert.tsx`. Their functionality was replaced/adapted using the Member 4 security design while preserving the main project's Next.js architecture.
-- The main project already had QR decoding in `backend/app/services/detect_pipeline.py`, so a second browser QR implementation was not copied into the main application. The Member 4 QR classification/policy behavior was integrated on top of the existing decoder.
-- The main project already had URL extraction, so the Member 4 URL security heuristics were added as the dedicated deterministic security layer rather than duplicating URL extraction logic.
+- The main project already had `frontend/components/analysis/SafetyLock.tsx` and `EmergencyAlert.tsx`. Their functionality was replaced/adapted using the security design while preserving the main project's Next.js architecture.
+- The main project already had QR decoding in `backend/app/services/detect_pipeline.py`, so a second browser QR implementation was not copied into the main application. The QR classification/policy behavior was integrated on top of the existing decoder.
+- The main project already had URL extraction, so the URL security heuristics were added as the dedicated deterministic security layer rather than duplicating URL extraction logic.
 
 ## Testing
 
