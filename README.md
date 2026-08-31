@@ -1,4 +1,4 @@
-# CyberRaksha 🛡️
+# CyberRaksha 
 
 **AI-Powered Cybersecurity Awareness & Emergency Protection Assistant for Modern Digital Fraud**
 
@@ -201,7 +201,7 @@ CyberRaksha/
 
 ---
 
-## ⚙️ Installation & Setup
+##  Installation & Setup
 
 ### Prerequisites
 * **Python 3.10+**
