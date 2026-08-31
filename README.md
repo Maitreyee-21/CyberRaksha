@@ -339,7 +339,7 @@ CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 ---
 
-## 🔄 API Endpoints
+##  API Endpoints
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -394,7 +394,7 @@ CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 ---
 
-## 📸 Screenshots / Demo
+##  Screenshots / Demo
 
 *(Screenshots can be placed in `docs/screenshots/` and referenced here)*
 
@@ -408,7 +408,7 @@ CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 
 ---
 
-## 🧪 Future Enhancements
+##  Future Enhancements
 
 ### Planned & Roadmap:
 - [ ] **Direct Granite Vision API Integration**: Connect live `ibm/granite-4.0-3b-vision` on watsonx.ai for direct visual layout scam detection alongside OCR.
