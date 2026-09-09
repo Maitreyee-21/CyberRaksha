@@ -1,16 +1,25 @@
-'use client';
-
 import './globals.css';
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+import { LanguageProvider } from '@/components/providers/LanguageProvider';
+
+export const metadata = {
+  title:
+    'CyberRaksha — Your Digital Safety Guardian',
+  description:
+    'Check suspicious messages, links, QR codes and screenshots before you click.',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <title>CyberRaksha — AI Cyber Security Assistant</title>
-        <meta name="description" content="Minimal, professional scam detection assistant powered by IBM Granite AI models." />
-      </head>
-      <body className="bg-zinc-950 text-zinc-100 antialiased min-h-screen">
-        {children}
+    <html lang="en">
+      <body className="bg-[#070B0F] text-white antialiased">
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

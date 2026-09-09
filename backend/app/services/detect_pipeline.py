@@ -93,11 +93,34 @@ def detect_content_type(request_body: Dict[str, Any]) -> Tuple[InputType, str, L
             return itype, f"[QR Code scan attempted — no data could be decoded from the provided image. User text: {text_content}]", detected_urls, None
 
     if itype == InputType.IMAGE:
-        extracted_text = _ocr_fallback(image_b64)
+        # Screenshot Analysis:
+        # 1. Extract readable text locally with OCR.
+        # 2. Extract URLs from both OCR text and optional user context.
+        # 3. Keep the OCR text explicitly separated so Granite can distinguish
+        #    evidence found in the screenshot from what the user typed.
+        extracted_text = _ocr_fallback(image_b64).strip()
+        user_context = text_content.strip()
+
         if extracted_text:
             detected_urls.extend(URL_REGEX.findall(extracted_text))
-        combined = f"SCREENSHOT / IMAGE ANALYSIS:\n--- OCR EXTRACTED TEXT ---\n{extracted_text}\n--- USER PROVIDED CONTEXT ---\n{text_content}"
-        return itype, combined.strip(), list(set(detected_urls)), None
+
+        if user_context:
+            detected_urls.extend(URL_REGEX.findall(user_context))
+
+        combined = (
+            "SCREENSHOT / IMAGE ANALYSIS:\n"
+            "--- OCR EXTRACTED TEXT ---\n"
+            f"{extracted_text or '[No readable text detected in screenshot]'}\n\n"
+            "--- DETECTED URLS FROM SCREENSHOT ---\n"
+            f"{', '.join(dict.fromkeys(detected_urls)) or 'None'}\n\n"
+            "--- USER PROVIDED CONTEXT ---\n"
+            f"{user_context or 'None'}"
+        )
+
+        # Even when OCR finds nothing, return the image-analysis marker so the
+        # downstream pipeline can report that the screenshot could not be read
+        # instead of silently treating it as ordinary text.
+        return itype, combined.strip(), list(dict.fromkeys(detected_urls)), None
 
     return itype, text_content.strip(), detected_urls, None
 
@@ -124,6 +147,11 @@ def heuristic_layer1_check(text: str) -> Dict[str, Any]:
         if any(x in t for x in ["bit.ly", "tinyurl", "t.co", ".xyz", ".top", ".tk", ".ml", ".cf", ".ga", ".gq"]):
             score += 30
             flags.append("QR code redirects to a shortened or high-risk domain commonly used in phishing.")
+
+    # Screenshot evidence should be treated as the same analyzable content as
+    # text, while retaining a clear signal that OCR was involved.
+    if "screenshot / image analysis:" in t:
+        flags.append("Screenshot content was analyzed using extracted text (OCR).")
 
     if len(urls_found) > 0:
         suspicious_shorteners = any(x in u.lower() for u in urls_found for x in ["bit.ly", "tinyurl", "t.co", "wa.me", "cutt.ly"])
@@ -245,32 +273,78 @@ def _decode_qr(image_b64: str, text_content: str) -> str:
 def _ocr_fallback(image_b64: str) -> str:
     """Local OCR fallback for screenshot scans.
 
-    This is deliberately separate from Granite Vision: it extracts readable text so
-    the normal Granite Instruct/Guardian text pipeline can still analyze a screenshot
-    when live vision inference is not configured.
+    Granite Vision remains a separate optional capability. Until live vision
+    inference is configured, OCR converts readable screenshot text into evidence
+    that the normal Granite Instruct + Guardian pipeline can analyze.
     """
     if not image_b64:
         return ""
+
     try:
         import base64
         from io import BytesIO
+
         from PIL import Image, ImageOps
         import numpy as np
         import cv2
         import pytesseract
 
-        b64_str = image_b64.split(",", 1)[-1]
+        b64_str = image_b64.split(",", 1)[-1].strip()
+        if not b64_str:
+            return ""
+
         img_bytes = base64.b64decode(b64_str, validate=True)
         img = Image.open(BytesIO(img_bytes)).convert("RGB")
+
+        # Upscale small screenshots because OCR accuracy can drop sharply on
+        # compressed chat/payment screenshots.
+        width, height = img.size
+        scale = 1.5
+        if width < 1200:
+            scale = max(scale, min(2.5, 1200 / max(width, 1)))
+
         gray = ImageOps.grayscale(img)
         cv_image = cv2.cvtColor(np.array(gray), cv2.COLOR_GRAY2BGR)
-        cv_image = cv2.resize(cv_image, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_CUBIC)
-        gray_cv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-        _, thresh = cv2.threshold(gray_cv, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        cv_image = cv2.resize(
+            cv_image,
+            None,
+            fx=scale,
+            fy=scale,
+            interpolation=cv2.INTER_CUBIC,
+        )
 
-        # Devanagari covers common Hindi/Marathi text; English remains supported.
-        text = pytesseract.image_to_string(thresh, lang="eng+Devanagari", config="--psm 6")
-        return text.strip()
+        gray_cv = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+
+        # Otsu thresholding improves text/background separation while keeping
+        # the implementation lightweight and local.
+        _, thresh = cv2.threshold(
+            gray_cv,
+            0,
+            255,
+            cv2.THRESH_BINARY + cv2.THRESH_OTSU,
+        )
+
+        # Devanagari covers common Hindi/Marathi screenshots; English remains
+        # supported. If the local Tesseract installation lacks Devanagari,
+        # fall back to English rather than failing the whole scan.
+        try:
+            text = pytesseract.image_to_string(
+                thresh,
+                lang="eng+Devanagari",
+                config="--psm 6",
+            )
+        except Exception:
+            text = pytesseract.image_to_string(
+                thresh,
+                lang="eng",
+                config="--psm 6",
+            )
+
+        # Normalize excessive blank lines without destroying the actual OCR
+        # wording that downstream scam analysis needs.
+        cleaned = re.sub(r"\n{3,}", "\n\n", text or "")
+        return cleaned.strip()
+
     except Exception as exc:
         logger.warning("Local OCR fallback failed: %s", exc)
         return ""
