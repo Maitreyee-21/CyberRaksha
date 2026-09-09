@@ -343,7 +343,6 @@ const [selectedType, setSelectedType] =
     } finally {
       setLoading(false);
     }
-  };
 
   /* =====================================================
      CHECK NOW
@@ -375,6 +374,40 @@ const [selectedType, setSelectedType] =
           handleFileChange
         }
       />
+    );
+  }
+
+  if (view === 'login') {
+    return (
+      <LoginScreen
+        onAuthenticated={handleAuthenticated}
+        onGoToHome={() => setView('home')}
+        onGoToRegister={() => setView('register')}
+      />
+    );
+  }
+
+  if (view === 'register') {
+    return (
+      <RegisterScreen
+        onGoToLogin={() => setView('login')}
+        onGoToHome={() => setView('home')}
+        onRegistered={() => setView('login')}
+      />
+    );
+  }
+
+  // view === 'scan' — protected; identity checked
+  if (!identity) {
+    // If not authenticated, redirect to login
+    return (
+      <LoginScreen
+        onAuthenticated={handleAuthenticated}
+        onGoToHome={() => setView('home')}
+        onGoToRegister={() => setView('register')}
+      />
+    );
+  }
 
       {/* =========================
           MOBILE MENU BUTTON

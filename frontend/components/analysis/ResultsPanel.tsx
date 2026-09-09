@@ -27,6 +27,7 @@ import { RedFlagsList } from '@/components/analysis/RedFlagsList';
 import { EmergencyAlert } from '@/components/analysis/EmergencyAlert';
 import { SafetyLock } from '@/components/analysis/SafetyLock';
 import { GuidancePanel } from '@/components/analysis/GuidancePanel';
+import { ReportDraft } from '@/components/report/ReportDraft';
 import type { ScanResult } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/components/providers/LanguageProvider';

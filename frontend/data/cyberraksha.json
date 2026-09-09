@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "id": "usr_1788111990726_47fmj69",
+      "fullName": "Aditya Verma",
+      "email": "aditya_1788111990522@example.com",
+      "username": "aditya_522",
+      "passwordHash": "$2b$10$FDN1AldRA1.qOlzfq55mKeR6Z1DVQ44PKjqrTObijVzmiCU.vQUdS",
+      "createdAt": "2026-08-30T17:46:30.726Z"
+    },
+    {
+      "id": "usr_1788937960093_uy2ogzd",
+      "fullName": "abc",
+      "email": "abc1@gmail.com",
+      "username": "abc123",
+      "passwordHash": "$2b$10$sWn7P3n8SLZIZ45dqUv5qeSaNUVJxbj4uUsCMaJdNJtyjbSiiJBV2",
+      "createdAt": "2026-09-09T07:12:40.093Z"
+    },
+    {
+      "id": "usr_1788938992565_j99ce19",
+      "fullName": "Aditya Verma",
+      "email": "aditya_1788938991799@example.com",
+      "username": "aditya_1799",
+      "passwordHash": "$2b$10$yXp3dpS.UZeZ5jCmRXqx/eEspfYfDUP6mADfwFgP3m4G5UEz1PoWy",
+      "createdAt": "2026-09-09T07:29:52.565Z"
+    }
+  ]
+}
