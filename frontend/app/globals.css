@@ -22,17 +22,80 @@
     --input: 240 6% 16%;
     --ring: 174 75% 42%;
     --radius: 0.625rem;
+    color-scheme: dark;
+  }
+
+  /*
+   * Light theme
+   *
+   * AppShell and Settings set data-theme on <html>.
+   * Keeping the theme in CSS variables means shadcn/Tailwind components
+   * using bg-background, text-foreground, border-border, etc. follow the
+   * selected theme automatically.
+   */
+  :root[data-theme="light"] {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --primary: 174 75% 38%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 174 75% 38%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 174 75% 38%;
+    color-scheme: light;
   }
 
   * {
     border-color: hsl(var(--border));
   }
 
+  html {
+    min-height: 100%;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
   body {
+    min-height: 100vh;
+    margin: 0;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
     -webkit-font-smoothing: antialiased;
+    transition:
+      background-color 300ms ease,
+      color 300ms ease;
+  }
+
+  body.cyberraksha-light {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  body.cyberraksha-dark {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: hsl(var(--muted-foreground) / 0.75);
   }
 
   ::selection {
@@ -45,23 +108,67 @@
   .risk-low { color: #10b981; }
   .risk-medium { color: #f59e0b; }
   .risk-high { color: #ef4444; }
-  
-  .bg-risk-low { background-color: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.2); }
-  .bg-risk-medium { background-color: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.2); }
-  .bg-risk-high { background-color: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.25); }
 
-  /* Custom scrollbar for history sidebar */
+  .bg-risk-low {
+    background-color: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+
+  .bg-risk-medium {
+    background-color: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+  }
+
+  .bg-risk-high {
+    background-color: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+
+  /* Custom scrollbar for history sidebar and other long panels. */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+  }
+
   .custom-scrollbar::-webkit-scrollbar {
     width: 5px;
+    height: 5px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(148, 163, 184, 0.35);
     border-radius: 9999px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(148, 163, 184, 0.55);
+  }
+
+  /*
+   * Theme-aware utility aliases for components that use CSS variables.
+   * Existing hard-coded dark components are intentionally left untouched;
+   * these utilities give the pages already using semantic Tailwind colors
+   * proper light/dark behavior without breaking their visual design.
+   */
+  .cyberraksha-bg {
+    background-color: hsl(var(--background));
+  }
+
+  .cyberraksha-card {
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-color: hsl(var(--border));
+  }
+
+  .cyberraksha-muted {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .cyberraksha-border {
+    border-color: hsl(var(--border));
   }
 }

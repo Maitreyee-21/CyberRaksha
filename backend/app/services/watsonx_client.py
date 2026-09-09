@@ -7,6 +7,42 @@ from app.core.schemas import ScamDNA
 logger = logging.getLogger(__name__)
 
 
+def _extract_json_object(value: Any) -> Optional[Dict[str, Any]]:
+    """Extract the first valid JSON object from a Granite model response."""
+    if not isinstance(value, str):
+        return None
+
+    raw = value.strip()
+    if not raw:
+        return None
+
+    try:
+        parsed = json.loads(raw)
+        return parsed if isinstance(parsed, dict) else None
+    except json.JSONDecodeError:
+        pass
+
+    cleaned = raw.replace("```json", "").replace("```", "").strip()
+    try:
+        parsed = json.loads(cleaned)
+        return parsed if isinstance(parsed, dict) else None
+    except json.JSONDecodeError:
+        pass
+
+    decoder = json.JSONDecoder()
+    for index, char in enumerate(cleaned):
+        if char != "{":
+            continue
+        try:
+            parsed, _ = decoder.raw_decode(cleaned[index:])
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            continue
+
+    return None
+
+
 class MockWatsonXClient:
     """
     Local fallback implementation for development/offline demos.
@@ -108,6 +144,7 @@ class MockWatsonXClient:
             "summary": summary,
             "guidance": guidance,
             "granite_risk_score_estimate": risk_est,
+            "input_type": "text",
         }
 
     def _extract_red_flags(self, text: str) -> List[str]:
@@ -394,11 +431,42 @@ class WatsonXService:
             "apikey": settings.IBM_WATSONX_API_KEY
         } if self._api_available else None
 
-    async def analyze_text(self, text: str) -> Dict[str, Any]:
-        # Call mock/heuristics first as baseline & default
+    async def analyze_text(self, text: str, input_type: Optional[str] = None) -> Dict[str, Any]:
+        # Call local analysis first as a deterministic baseline/fallback.
         instruct_result = self.client.granite_instruct_analyze(text)
         guardian_result = self.client.guardian_analyze(text)
         similarity = self.client.granite_embedding_similarity(text)
+
+        # routes.py may provide the input type explicitly. If it does not,
+        # preserve the existing marker-based detection for backward compatibility.
+        normalized_upper = (text or "").upper()
+        if input_type:
+            detected_input_type = input_type.strip().lower()
+        elif "SCREENSHOT / IMAGE ANALYSIS:" in normalized_upper:
+            detected_input_type = "image"
+        elif "QR CODE SCAN" in normalized_upper:
+            detected_input_type = "qr"
+        elif "URL TO ANALYZE:" in normalized_upper:
+            detected_input_type = "url"
+        else:
+            detected_input_type = "text"
+
+        instruct_result["input_type"] = detected_input_type
+        instruct_result["normalized_content"] = text
+
+        # Make OCR output available to the result layer for screenshot metadata.
+        if detected_input_type == "image":
+            marker = "--- OCR EXTRACTED TEXT ---"
+            start = normalized_upper.find(marker)
+            if start >= 0:
+                actual_start = start + len(marker)
+                end = normalized_upper.find(
+                    "--- USER PROVIDED CONTEXT ---",
+                    actual_start,
+                )
+                if end < 0:
+                    end = len(text)
+                instruct_result["ocr_extracted_text"] = text[actual_start:end].strip()
         
         api_mode = "local_fallback"
         api_error = None
@@ -429,9 +497,10 @@ class WatsonXService:
                 )
                 
                 prompt = (
-                    "You are a scam detection assistant. Analyze the following message for fraud/scams:\n"
-                    f"\"{text}\"\n\n"
-                    "Select the most appropriate category from this list:\n"
+                    "You are CyberRaksha, a cybersecurity scam-analysis assistant. "
+                    "Analyze the supplied content carefully and return ONLY valid JSON.\n\n"
+                    f"CONTENT TO ANALYZE:\n{text}\n\n"
+                    "Choose exactly one primary category from:\n"
                     "- OTP / Verification Fraud\n"
                     "- Fake KYC / Account Scam\n"
                     "- UPI / Payment Fraud\n"
@@ -443,71 +512,139 @@ class WatsonXService:
                     "- Fraudulent Loan Offer Scam\n"
                     "- Fake Job Offer Scam\n"
                     "- Benign Message\n\n"
-                    "Output a valid JSON object matching this schema exactly:\n"
+                    "Identify concrete behavioral red flags. Do not invent evidence that "
+                    "is not present in the content. Estimate risk from 0 to 100.\n\n"
+                    "Return exactly this JSON structure:\n"
                     "{\n"
-                    "  \"scam_category\": \"category_name\",\n"
-                    "  \"category_confidence\": confidence_score_int,\n"
-                    "  \"red_flags\": [\"flag1\", \"flag2\", ...],\n"
-                    "  \"summary\": \"short summary describing the threat\",\n"
-                    "  \"granite_risk_score_estimate\": risk_score_int\n"
+                    "  \"scam_category\": \"one category from the list\",\n"
+                    "  \"category_confidence\": 0,\n"
+                    "  \"red_flags\": [\"evidence-based flag\"],\n"
+                    "  \"summary\": \"short plain-language explanation\",\n"
+                    "  \"granite_risk_score_estimate\": 0\n"
                     "}\n\n"
-                    "JSON Output:\n"
+                    "All numeric values must be integers from 0 to 100. "
+                    "JSON only, with no markdown fences or extra text."
                 )
                 
                 res = instruct_model.generate_text(prompt=prompt)
                 
                 try:
-                    # Clean up markdown code block wrapping if present
-                    cleaned_res = res.strip()
-                    if cleaned_res.startswith("```json"):
-                        cleaned_res = cleaned_res[7:]
-                    if cleaned_res.endswith("```"):
-                        cleaned_res = cleaned_res[:-3]
-                    parsed = json.loads(cleaned_res.strip())
+                    parsed = _extract_json_object(res)
+                    if parsed is None:
+                        raise ValueError(
+                            "Granite Instruct response did not contain a valid JSON object"
+                        )
                     
-                    instruct_result["scam_category"] = parsed.get("scam_category", instruct_result["scam_category"])
-                    instruct_result["category_confidence"] = parsed.get("category_confidence", instruct_result["category_confidence"])
-                    instruct_result["red_flags"] = parsed.get("red_flags", instruct_result["red_flags"])
-                    instruct_result["summary"] = parsed.get("summary", instruct_result["summary"])
-                    instruct_result["granite_risk_score_estimate"] = parsed.get("granite_risk_score_estimate", instruct_result["granite_risk_score_estimate"])
-                    instruct_result["guidance"] = self.client._generate_guidance(instruct_result["scam_category"], {})
+                    instruct_result["scam_category"] = str(
+                        parsed.get(
+                            "scam_category",
+                            instruct_result["scam_category"],
+                        )
+                    )
+                    instruct_result["category_confidence"] = max(
+                        0,
+                        min(
+                            100,
+                            int(
+                                float(
+                                    parsed.get(
+                                        "category_confidence",
+                                        instruct_result["category_confidence"],
+                                    )
+                                )
+                            ),
+                        ),
+                    )
+                    parsed_flags = parsed.get(
+                        "red_flags",
+                        instruct_result["red_flags"],
+                    )
+                    if isinstance(parsed_flags, list):
+                        instruct_result["red_flags"] = [
+                            str(flag).strip()
+                            for flag in parsed_flags
+                            if str(flag).strip()
+                        ][:8]
+
+                    instruct_result["summary"] = str(
+                        parsed.get(
+                            "summary",
+                            instruct_result["summary"],
+                        )
+                    )
+                    instruct_result["granite_risk_score_estimate"] = max(
+                        0,
+                        min(
+                            100,
+                            int(
+                                float(
+                                    parsed.get(
+                                        "granite_risk_score_estimate",
+                                        instruct_result["granite_risk_score_estimate"],
+                                    )
+                                )
+                            ),
+                        ),
+                    )
                     instruct_live = True
-                    
                 except Exception as parse_err:
-                    logger.warning(f"Failed to parse Granite Instruct JSON response: {parse_err}. Response: {res}")
-                    api_error = f"JSON Parse Error: {parse_err}"
-                    
+                    logger.warning(
+                        "Failed to parse Granite Instruct JSON response: %s. "
+                        "Response: %s",
+                        parse_err,
+                        res,
+                    )
+
                 # 2. Query Granite Guardian
                 try:
                     guardian_model = ModelInference(
                         model_id=settings.MODEL_GRANITE_GUARDIAN,
                         params=generate_params,
                         credentials=self._credentials,
-                        **scope_kwargs
+                        **scope_kwargs,
                     )
-                    
+
                     guardian_prompt = (
-                        "Analyze this message to determine if it is unsafe (e.g. contains social engineering, phishing, fraud, or spam):\n"
-                        f"\"{text}\"\n\n"
+                        "Analyze this message to determine if it is unsafe "
+                        "(e.g. contains social engineering, phishing, fraud, or spam):\n"
+                        f'"{text}"\n\n'
                         "Respond with either 'safe' or 'unsafe'.\n"
                         "Result: "
                     )
-                    guardian_res = guardian_model.generate_text(prompt=guardian_prompt).strip().lower()
-                    
-                    if "unsafe" in guardian_res:
+
+                    guardian_raw = guardian_model.generate_text(prompt=guardian_prompt)
+                    guardian_res = str(guardian_raw or "").strip().lower()
+
+                    # Check unsafe first because the word "unsafe" contains "safe".
+                    # Accept exact labels and short explanatory responses.
+                    import re
+
+                    if re.search(r"\bunsafe\b", guardian_res):
                         guardian_result["risk_level"] = "HIGH"
-                        guardian_result["guardian_risk_score"] = max(guardian_result["guardian_risk_score"], 80)
+                        guardian_result["guardian_risk_score"] = max(
+                            guardian_result["guardian_risk_score"],
+                            80,
+                        )
                         guardian_live = True
-                    elif "safe" in guardian_res:
+                    elif re.search(r"\bsafe\b", guardian_res):
                         guardian_result["risk_level"] = "LOW"
-                        guardian_result["guardian_risk_score"] = min(guardian_result["guardian_risk_score"], 20)
+                        guardian_result["guardian_risk_score"] = min(
+                            guardian_result["guardian_risk_score"],
+                            20,
+                        )
                         guardian_live = True
                     else:
-                        logger.warning("Granite Guardian returned an unrecognized result; keeping local fallback result.")
-                        
+                        logger.warning(
+                            "Granite Guardian returned an unrecognized result; "
+                            "keeping local fallback result. Response: %s",
+                            guardian_raw,
+                        )
+
                 except Exception as guard_err:
-                    logger.warning(f"Granite Guardian call skipped or failed: {guard_err}")
-                    
+                    logger.warning(
+                        "Granite Guardian call skipped or failed: %s",
+                        guard_err,
+                    )
             except Exception as e:
                 logger.error(f"Failed to query live Watsonx.ai models: {e}. Falling back to local analysis.")
                 api_error = str(e)

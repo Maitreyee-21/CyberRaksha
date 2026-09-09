@@ -1,220 +1,686 @@
 'use client';
 
-import * as React from 'react';
-import { 
-  Shield, Plus, History, Trash2, X, MessageSquare, 
-  Image as ImageIcon, Link2, QrCode, ChevronLeft, ChevronRight, Info
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  usePathname,
+  useRouter,
+} from 'next/navigation';
+
+import {
+  Home,
+  History,
+  ShieldCheck,
+  Lightbulb,
+  Flag,
+  Settings,
+  Plus,
+  X,
+  Trash2,
+  MessageSquare,
+  Link2,
+  QrCode,
+  Image as ImageIcon,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScanHistoryItem } from '@/lib/types';
-import { cn } from '@/lib/types';
+
+import {
+  loadScanHistory,
+  deleteScanHistoryItem,
+  clearAllScanHistory,
+} from '@/lib/history';
+
+import type {
+  ScanHistoryItem,
+} from '@/lib/types';
+
+import {
+  useLanguage,
+} from '@/components/providers/LanguageProvider';
+
+import {
+  translations,
+} from '@/lib/translations';
 
 interface SidebarProps {
-  history: ScanHistoryItem[];
-  currentId: string | null;
-  onSelectScan: (item: ScanHistoryItem) => void;
-  onNewScan: () => void;
-  onDeleteScan: (id: string, e: React.MouseEvent) => void;
-  onClearHistory: () => void;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
   mobileOpen: boolean;
   onCloseMobile: () => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
 export function Sidebar({
-  history,
-  currentId,
-  onSelectScan,
-  onNewScan,
-  onDeleteScan,
-  onClearHistory,
-  collapsed,
-  onToggleCollapse,
   mobileOpen,
   onCloseMobile,
+  collapsed,
+  onToggleCollapse,
 }: SidebarProps) {
-  const getIcon = (type: string) => {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const {
+    language,
+  } = useLanguage();
+
+  const t =
+    translations[language] ?? translations.en;
+
+  // Current translations are grouped as `nav` and `home`.
+  // Keeping these aliases here prevents objects from being rendered as React children.
+  const navigationText = t.nav;
+  const homeText = t.home;
+
+  const [history, setHistory] =
+    useState<ScanHistoryItem[]>(
+      []
+    );
+
+  const [safetyLockEnabled, setSafetyLockEnabled] =
+    useState(true);
+
+  useEffect(() => {
+    setHistory(
+      loadScanHistory()
+    );
+
+    try {
+      const savedLock =
+        window.localStorage.getItem(
+          'cyberraksha-safety-lock'
+        );
+
+      if (savedLock !== null) {
+        setSafetyLockEnabled(
+          savedLock === 'true'
+        );
+      }
+    } catch {
+      // Keep the default protected state if browser storage is unavailable.
+    }
+  }, [pathname]);
+
+  const navigate = (
+    path: string
+  ) => {
+    router.push(path);
+    onCloseMobile();
+  };
+
+  const navigation = [
+    {
+      label: navigationText.home,
+      path: '/',
+      icon: Home,
+    },
+    {
+      label: navigationText.history,
+      path: '/history',
+      icon: History,
+    },
+    {
+      label: navigationText.safetyLock,
+      path: '/safety-lock',
+      icon: ShieldCheck,
+    },
+    {
+      label: navigationText.safetyTips,
+      path: '/safety-tips',
+      icon: Lightbulb,
+    },
+    {
+      label: navigationText.reportScam,
+      path: '/report',
+      icon: Flag,
+    },
+    {
+      label: navigationText.settings,
+      path: '/settings',
+      icon: Settings,
+    },
+  ];
+
+  const active = (
+    path: string
+  ) => {
+    if (path === '/') {
+      return pathname === '/';
+    }
+
+    return pathname.startsWith(path);
+  };
+
+  const historyIcon = (
+    type: string
+  ) => {
     switch (type) {
-      case 'image': return <ImageIcon size={14} className="text-zinc-400 shrink-0" />;
-      case 'url': return <Link2 size={14} className="text-zinc-400 shrink-0" />;
-      case 'qr': return <QrCode size={14} className="text-zinc-400 shrink-0" />;
-      default: return <MessageSquare size={14} className="text-zinc-400 shrink-0" />;
+      case 'url':
+        return (
+          <Link2 size={14} />
+        );
+
+      case 'qr':
+        return (
+          <QrCode size={14} />
+        );
+
+      case 'image':
+        return (
+          <ImageIcon size={14} />
+        );
+
+      default:
+        return (
+          <MessageSquare
+            size={14}
+          />
+        );
     }
   };
 
-  const getRiskBadge = (level: string) => {
-    switch (level) {
+  const riskColor = (
+    risk: string
+  ) => {
+    switch (
+      String(risk).toUpperCase()
+    ) {
       case 'HIGH':
-        return <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" title="High Risk" />;
+        return 'bg-red-400';
+
       case 'MEDIUM':
-        return <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Suspicious" />;
+        return 'bg-amber-400';
+
       default:
-        return <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Low Risk" />;
+        return 'bg-emerald-400';
     }
+  };
+
+  const removeHistory = (
+    id: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+
+    const updated =
+      deleteScanHistoryItem(id);
+
+    setHistory(updated);
+  };
+
+  const clearHistory = () => {
+    clearAllScanHistory();
+    setHistory([]);
   };
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* MOBILE BACKDROP */}
       {mobileOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs md:hidden"
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm lg:hidden"
           onClick={onCloseMobile}
         />
       )}
 
-      {/* Sidebar Container */}
       <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col bg-zinc-950 border-r border-zinc-800/80 transition-all duration-200 md:static',
-          collapsed ? 'w-0 md:w-16 overflow-hidden' : 'w-72',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        )}
+        className={`
+          fixed left-0 top-0 z-[70]
+          flex h-screen flex-col
+          border-r border-white/[0.06]
+          bg-[#090E13]
+          shadow-2xl
+          transition-all duration-300
+
+          ${
+            mobileOpen
+              ? 'translate-x-0'
+              : '-translate-x-full'
+          }
+
+          lg:translate-x-0
+
+          ${
+            collapsed
+              ? 'lg:w-[82px]'
+              : 'w-[290px] lg:w-[290px]'
+          }
+        `}
       >
-        {/* Top App Header & New Scan */}
-        <div className="p-3 border-b border-zinc-800/60 flex items-center justify-between gap-2">
-          {!collapsed && (
-            <div className="flex items-center gap-2.5 px-1.5 py-1">
-              <div className="w-7 h-7 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400">
-                <Shield size={16} />
-              </div>
-              <div>
-                <span className="font-semibold text-sm tracking-tight text-zinc-100">CyberRaksha</span>
-                <span className="block text-[10px] text-zinc-400 -mt-0.5">Scam Intelligence</span>
-              </div>
+
+        {/* BRAND */}
+        <div
+          className={`
+            flex h-[92px] shrink-0
+            items-center
+            border-b border-white/[0.06]
+
+            ${
+              collapsed
+                ? 'justify-center px-3'
+                : 'px-5'
+            }
+          `}
+        >
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate('/')
+            }
+            className="flex items-center gap-3"
+          >
+
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#00E6D0]/10">
+              <ShieldCheck
+                size={30}
+                strokeWidth={1.8}
+                className="text-[#00E6D0]"
+              />
             </div>
+
+            {!collapsed && (
+              <div className="text-left">
+                <div className="text-[22px] font-extrabold tracking-tight">
+                  Cyber
+                  <span className="text-[#00E6D0]">
+                    Raksha
+                  </span>
+                </div>
+
+                <div className="text-[10px] text-slate-600">
+                  Be Aware. Be Safer.
+                </div>
+              </div>
+            )}
+
+          </button>
+
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            className="ml-auto text-slate-500 hover:text-white lg:hidden"
+            aria-label="Close menu"
+          >
+            <X size={21} />
+          </button>
+
+        </div>
+
+        {/* NEW CHECK */}
+        <div
+          className={
+            collapsed
+              ? 'px-3 pt-4'
+              : 'px-5 pt-4'
+          }
+        >
+          <button
+            type="button"
+            onClick={() =>
+              navigate('/scan')
+            }
+            title={
+              collapsed
+                ? "New Check"
+                : undefined
+            }
+            className={`
+              flex h-11 w-full
+              items-center rounded-xl
+              bg-[#00E6D0]/10
+              text-[#00E6D0]
+              transition
+              hover:bg-[#00E6D0]/15
+              ${
+                collapsed
+                  ? 'justify-center'
+                  : 'gap-3 px-4'
+              }
+            `}
+          >
+            <Plus size={19} />
+
+            {!collapsed && (
+              <span className="font-bold">
+                New Check
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* NAVIGATION */}
+        <nav
+          className={`
+            mt-4
+            ${
+              collapsed
+                ? 'px-3'
+                : 'px-5'
+            }
+          `}
+        >
+
+          {navigation.map(
+            (item) => {
+              const Icon =
+                item.icon;
+
+              const isCurrent =
+                active(
+                  item.path
+                );
+
+              return (
+                <button
+                  key={
+                    item.path
+                  }
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      item.path
+                    )
+                  }
+                  title={
+                    collapsed
+                      ? item.label
+                      : undefined
+                  }
+                  className={`
+                    relative mb-1.5
+                    flex h-11 w-full
+                    items-center
+                    rounded-xl
+                    transition-all
+
+                    ${
+                      collapsed
+                        ? 'justify-center'
+                        : 'gap-4 px-4'
+                    }
+
+                    ${
+                      isCurrent
+                        ? 'bg-[#00CDBB]/15 text-[#00E6D0]'
+                        : 'text-slate-400 hover:bg-white/[0.04] hover:text-white'
+                    }
+                  `}
+                >
+
+                  {isCurrent && (
+                    <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[#00E6D0]" />
+                  )}
+
+                  <Icon
+                    size={21}
+                    strokeWidth={
+                      isCurrent
+                        ? 2.4
+                        : 1.8
+                    }
+                  />
+
+                  {!collapsed && (
+                    <span className="text-[14px] font-medium">
+                      {item.label}
+                    </span>
+                  )}
+
+                </button>
+              );
+            }
           )}
 
-          <div className="flex items-center gap-1 ml-auto">
-            <button
-              onClick={onToggleCollapse}
-              className="hidden md:flex p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition"
-              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            </button>
-            <button
-              onClick={onCloseMobile}
-              className="flex md:hidden p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </div>
+        </nav>
 
-        {/* New Scan Button */}
-        <div className="p-3">
-          <Button
-            onClick={onNewScan}
-            variant="default"
-            size="sm"
-            className={cn(
-              'w-full bg-zinc-900 hover:bg-zinc-800 text-zinc-100 border border-zinc-700/80 font-medium justify-start gap-2 shadow-xs transition',
-              collapsed && 'px-0 justify-center'
-            )}
-            title="Start New Scan"
+        {/* COLLAPSE BUTTON */}
+        <div
+          className={
+            collapsed
+              ? 'mt-2 px-3'
+              : 'mt-2 px-5'
+          }
+        >
+          <button
+            type="button"
+            onClick={
+              onToggleCollapse
+            }
+            title={
+              collapsed
+                ? 'Expand sidebar'
+                : 'Collapse sidebar'
+            }
+            className={`
+              flex h-10 w-full
+              items-center rounded-xl
+              text-slate-600
+              transition
+              hover:bg-white/[0.04]
+              hover:text-slate-300
+
+              ${
+                collapsed
+                  ? 'justify-center'
+                  : 'gap-3 px-4'
+              }
+            `}
           >
-            <Plus size={16} className="text-teal-400 shrink-0" />
-            {!collapsed && <span>New Scan</span>}
-          </Button>
+            {collapsed ? (
+              <PanelLeftOpen
+                size={18}
+              />
+            ) : (
+              <>
+                <PanelLeftClose
+                  size={18}
+                />
+
+                <span className="text-xs">
+                  Collapse
+                </span>
+              </>
+            )}
+          </button>
         </div>
 
-        {/* History List */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-1 space-y-0.5">
-          {!collapsed && (
-            <div className="flex items-center justify-between px-2 py-1 text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-              <span>Recent Scans</span>
-              {history.length > 0 && (
+        {/* RECENT CHECKS */}
+        {!collapsed && (
+          <div className="mt-4 flex min-h-0 flex-1 flex-col px-5">
+
+            <div className="flex items-center justify-between">
+
+              <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">
+                Recent Checks
+              </span>
+
+              {history.length >
+                0 && (
                 <button
-                  onClick={onClearHistory}
-                  className="hover:text-red-400 transition"
-                  title="Clear scan history"
+                  type="button"
+                  onClick={
+                    clearHistory
+                  }
+                  className="text-[10px] text-slate-600 hover:text-red-400"
                 >
                   Clear
                 </button>
               )}
+
             </div>
-          )}
 
-          {history.length === 0 ? (
-            !collapsed && (
-              <div className="px-3 py-6 text-center text-xs text-zinc-400">
-                No past scans yet. Start a new scan below.
-              </div>
-            )
-          ) : (
-            history.map((item) => {
-              const isSelected = currentId === item.id;
-              const dateStr = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-              
-              if (collapsed) {
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => onSelectScan(item)}
-                    className={cn(
-                      'w-full p-2.5 rounded-lg flex items-center justify-center hover:bg-zinc-900 transition my-0.5',
-                      isSelected ? 'bg-zinc-900 text-teal-400 border border-zinc-800' : 'text-zinc-400'
-                    )}
-                    title={`${item.result.scam_category} (${item.result.risk_level})`}
-                  >
-                    {getRiskBadge(item.result.risk_level)}
-                  </button>
-                );
-              }
+            <div className="custom-scrollbar mt-2 flex-1 overflow-y-auto">
 
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => onSelectScan(item)}
-                  className={cn(
-                    'group w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-left text-xs cursor-pointer transition select-none',
-                    isSelected 
-                      ? 'bg-zinc-900 text-zinc-100 border border-zinc-800/90 font-medium' 
-                      : 'text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200'
-                  )}
-                >
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    {getRiskBadge(item.result.risk_level)}
-                    <div className="truncate">
-                      <div className="truncate text-zinc-200">{item.result.scam_category}</div>
-                      <div className="text-[10px] text-zinc-400 truncate mt-0.5">{item.snippet}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-[10px] text-zinc-400 group-hover:hidden">{dateStr}</span>
-                    <button
-                      onClick={(e) => onDeleteScan(item.id, e)}
-                      className="hidden group-hover:flex p-1 rounded hover:bg-zinc-800 text-zinc-400 hover:text-red-400 transition"
-                      title="Delete this scan"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
+              {history.length ===
+              0 ? (
+                <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-4 text-center text-[11px] leading-5 text-slate-600">
+                  No recent checks.
+                  <br />
+                  Start a new check.
                 </div>
-              );
-            })
-          )}
+              ) : (
+                <div className="space-y-1">
+
+                  {history
+                    .slice(0, 5)
+                    .map(
+                      (item) => (
+                        <div
+                          key={item.id}
+                          className="group flex w-full items-center gap-2 rounded-lg p-1.5 text-left hover:bg-white/[0.035]"
+                        >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(
+                                `/history?id=${item.id}`
+                              )
+                            }
+                            className="flex min-w-0 flex-1 items-center gap-2 rounded-lg p-1.5 text-left"
+                            title="Open this check"
+                          >
+
+                          <span
+                            className={`h-1.5 w-1.5 shrink-0 rounded-full ${riskColor(
+                              item
+                                .result
+                                .risk_level
+                            )}`}
+                          />
+
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#121A21] text-slate-500">
+                            {historyIcon(
+                              item.inputType
+                            )}
+                          </span>
+
+                          <span className="min-w-0 flex-1">
+
+                            <span className="block truncate text-[10px] font-semibold text-slate-400">
+                              {
+                                item
+                                  .result
+                                  .scam_category
+                              }
+                            </span>
+
+                            <span className="block truncate text-[9px] text-slate-600">
+                              {
+                                item.snippet
+                              }
+                            </span>
+
+                          </span>
+
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(event) =>
+                              removeHistory(item.id, event)
+                            }
+                            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-600 hover:bg-red-500/10 hover:text-red-400 group-hover:flex"
+                            aria-label="Delete this recent check"
+                            title="Delete check"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      )
+                    )}
+
+                </div>
+              )}
+
+            </div>
+          </div>
+        )}
+
+        {/* PROTECTED */}
+        <div
+          className={
+            collapsed
+              ? 'p-3'
+              : 'p-5'
+          }
+        >
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                '/safety-lock'
+              )
+            }
+            title={
+              collapsed
+                ? navigationText.safetyLock
+                : undefined
+            }
+            className={`
+              w-full rounded-xl
+              border border-[#00E6D0]/10
+              bg-[#00E6D0]/[0.04]
+
+              ${
+                collapsed
+                  ? 'flex h-11 items-center justify-center'
+                  : 'p-3'
+              }
+            `}
+          >
+
+            {collapsed ? (
+              <ShieldCheck
+                size={21}
+                className="text-[#00E6D0]"
+              />
+            ) : (
+              <div className="flex items-center gap-3">
+
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#00E6D0]/10">
+                  <ShieldCheck
+                    size={18}
+                    className="text-[#00E6D0]"
+                  />
+                </div>
+
+                <div className="min-w-0 flex-1 text-left">
+
+                  <div className="text-xs font-bold">
+                    Protected
+                  </div>
+
+                  <div className="mt-0.5 text-[9px] text-slate-500">
+                    {safetyLockEnabled
+                      ? "Protection Active"
+                      : 'Protection paused'}
+                  </div>
+
+                </div>
+
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[8px] font-bold ${
+                    safetyLockEnabled
+                      ? 'bg-[#00D394] text-black'
+                      : 'bg-slate-700 text-slate-300'
+                  }`}
+                >
+                  {safetyLockEnabled ? 'ON' : 'OFF'}
+                </span>
+
+              </div>
+            )}
+
+          </button>
+
         </div>
 
-        {/* Bottom subtle system info */}
-        <div className="p-3 border-t border-zinc-800/60 text-[11px] text-zinc-400 bg-zinc-950/80">
-          {!collapsed ? (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="flex items-center gap-1"><Info size={12} className="text-teal-400" /> IBM watsonx.ai</span>
-                <span>Granite 4.1</span>
-              </div>
-              <div className="text-[10px] text-zinc-400">Multilingual: EN · HI · MR</div>
-            </div>
-          ) : (
-            <div className="flex justify-center" title="IBM watsonx.ai · Granite 4.1">
-              <Info size={14} className="text-zinc-400" />
-            </div>
-          )}
-        </div>
       </aside>
     </>
   );
