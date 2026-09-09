@@ -2,10 +2,11 @@
 
 import * as React from 'react';
 import { LoginScreen } from '@/components/auth/LoginScreen';
+import { RegisterScreen } from '@/components/auth/RegisterScreen';
 import { LandingPage } from '@/components/home/LandingPage';
 import { ScanApp } from '@/components/scan/ScanApp';
 
-type View = 'home' | 'login' | 'scan';
+type View = 'home' | 'login' | 'register' | 'scan';
 type Identity = { name: string; guest: boolean };
 
 export default function RootPage() {
@@ -71,6 +72,7 @@ export default function RootPage() {
     return (
       <LandingPage
         onGoToLogin={() => setView('login')}
+        onGoToRegister={() => setView('register')}
         onRegistered={() => setView('login')}
       />
     );
@@ -81,6 +83,17 @@ export default function RootPage() {
       <LoginScreen
         onAuthenticated={handleAuthenticated}
         onGoToHome={() => setView('home')}
+        onGoToRegister={() => setView('register')}
+      />
+    );
+  }
+
+  if (view === 'register') {
+    return (
+      <RegisterScreen
+        onGoToLogin={() => setView('login')}
+        onGoToHome={() => setView('home')}
+        onRegistered={() => setView('login')}
       />
     );
   }
@@ -92,6 +105,7 @@ export default function RootPage() {
       <LoginScreen
         onAuthenticated={handleAuthenticated}
         onGoToHome={() => setView('home')}
+        onGoToRegister={() => setView('register')}
       />
     );
   }

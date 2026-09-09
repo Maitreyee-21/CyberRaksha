@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 interface LoginScreenProps {
   onAuthenticated: (identity: { name: string; guest: boolean }) => void;
   onGoToHome?: () => void;
+  onGoToRegister?: () => void;
 }
 
-export function LoginScreen({ onAuthenticated, onGoToHome }: LoginScreenProps) {
+export function LoginScreen({ onAuthenticated, onGoToHome, onGoToRegister }: LoginScreenProps) {
   const [identifier, setIdentifier] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [showPassword, setShowPassword] = React.useState(false);
@@ -190,20 +191,20 @@ export function LoginScreen({ onAuthenticated, onGoToHome }: LoginScreenProps) {
 
         <p className="mt-6 text-center text-xs text-zinc-400">
           New to CyberRaksha?{' '}
-          {onGoToHome ? (
+          {onGoToRegister ? (
+            <button
+              onClick={onGoToRegister}
+              className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-2 transition"
+            >
+              Create an account
+            </button>
+          ) : (
             <button
               onClick={onGoToHome}
               className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-2 transition"
             >
               Create an account
             </button>
-          ) : (
-            <a
-              href="/"
-              className="text-cyan-400 hover:text-cyan-300 font-medium underline underline-offset-2 transition"
-            >
-              Create an account
-            </a>
           )}
         </p>
       </div>

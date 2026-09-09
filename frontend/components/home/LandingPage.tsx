@@ -33,6 +33,7 @@ import { Input } from '@/components/ui/input';
 interface LandingPageProps {
   onGoToLogin: () => void;
   onRegistered: () => void;
+  onGoToRegister?: () => void;
 }
 
 const FEATURES = [
