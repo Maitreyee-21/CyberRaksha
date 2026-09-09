@@ -4,9 +4,6 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Globe,
   Type,
-  Volume2,
-  Moon,
-  Sun,
   Shield,
   FileText,
   Info,
@@ -30,7 +27,7 @@ type SettingsCopy = {
   subtitle: string;
   language: string;
   textSize: string;
-  listen: string;
+  listen?: string;
   darkMode: string;
   lightMode: string;
   privacy: string;
@@ -160,7 +157,6 @@ const translations: Partial<Record<LanguageCode, Partial<SettingsCopy>>> = {
 };
 
 const TEXT_SIZE_KEY = 'cyberraksha-text-size';
-const LISTEN_KEY = 'cyberraksha-listen';
 const THEME_KEY = 'cyberraksha-theme';
 
 const textSizeLabels: Record<TextSize, keyof SettingsCopy> = {
@@ -178,13 +174,6 @@ function readStoredTextSize(): TextSize {
     : 'normal';
 }
 
-function readStoredBoolean(key: string, fallback: boolean) {
-  if (typeof window === 'undefined') return fallback;
-  const value = window.localStorage.getItem(key);
-  if (value === null) return fallback;
-  return value === 'true';
-}
-
 function applyTextSize(size: TextSize) {
   const root = document.documentElement;
   const scale = {
@@ -198,13 +187,7 @@ function applyTextSize(size: TextSize) {
   root.dataset.textSize = size;
 }
 
-function applyTheme(dark: boolean) {
-  const root = document.documentElement;
-  root.dataset.theme = dark ? 'dark' : 'light';
-  root.classList.toggle('dark', dark);
-  document.body?.classList.toggle('cyberraksha-light', !dark);
-  document.body?.classList.toggle('cyberraksha-dark', dark);
-}
+
 
 export default function SettingsPage() {
   const { language, setLanguage } = useLanguage();
@@ -212,8 +195,6 @@ export default function SettingsPage() {
   const [languageOpen, setLanguageOpen] = useState(false);
   const [textSizeOpen, setTextSizeOpen] = useState(false);
   const [textSize, setTextSize] = useState<TextSize>('normal');
-  const [listen, setListen] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
   const [modal, setModal] = useState<'privacy' | 'terms' | 'about' | null>(null);
 
   const t = useMemo(
@@ -225,21 +206,11 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const savedSize = readStoredTextSize();
-    const savedListen = readStoredBoolean(LISTEN_KEY, true);
-    const savedTheme = window.localStorage.getItem(THEME_KEY);
-
     setTextSize(savedSize);
-    setListen(savedListen);
-    setDarkMode(savedTheme ? savedTheme === 'dark' : true);
-
     applyTextSize(savedSize);
-    applyTheme(savedTheme ? savedTheme === 'dark' : true);
 
     const onStorage = () => {
       setTextSize(readStoredTextSize());
-      setListen(readStoredBoolean(LISTEN_KEY, true));
-      const theme = window.localStorage.getItem(THEME_KEY);
-      setDarkMode(theme ? theme === 'dark' : true);
     };
 
     window.addEventListener('storage', onStorage);
@@ -261,41 +232,14 @@ export default function SettingsPage() {
     setTextSizeOpen(false);
   };
 
-  const toggleListen = () => {
-    const next = !listen;
-    setListen(next);
-    window.localStorage.setItem(LISTEN_KEY, String(next));
-    window.dispatchEvent(
-      new CustomEvent('cyberraksha-listen-change', { detail: next })
-    );
-  };
-
-  const toggleDarkMode = () => {
-    const next = !darkMode;
-    setDarkMode(next);
-    window.localStorage.setItem(THEME_KEY, next ? 'dark' : 'light');
-    applyTheme(next);
-    window.dispatchEvent(
-      new CustomEvent('cyberraksha-theme-change', { detail: next ? 'dark' : 'light' })
-    );
-  };
-
-  const speakSetting = (text: string) => {
-    if (!listen || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = currentLanguage.code;
-    window.speechSynthesis.speak(utterance);
-  };
-
   return (
     <AppShell>
-      <section className="px-5 py-10 sm:px-8 lg:px-10">
+      <section className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10">
         <div className="mx-auto max-w-[800px]">
           <h1 className="text-3xl font-bold text-white">{t.title}</h1>
           <p className="mt-2 text-sm text-slate-500">{t.subtitle}</p>
 
-          <div className="mt-8 overflow-visible rounded-2xl border border-white/[0.07] bg-[#10161C]">
+          <div className="mt-6 overflow-visible rounded-2xl border border-white/[0.07] bg-[#10161C]">
             <Row
               icon={<Globe size={19} />}
               title={t.language}
@@ -384,25 +328,6 @@ export default function SettingsPage() {
               </div>
             )}
 
-            <Toggle
-              icon={<Volume2 size={19} />}
-              title={t.listen}
-              enabled={listen}
-              onChange={toggleListen}
-              onLabel={t.on}
-              offLabel={t.off}
-              onTest={() => speakSetting(t.listen)}
-            />
-
-            <Toggle
-              icon={darkMode ? <Moon size={19} /> : <Sun size={19} />}
-              title={darkMode ? t.darkMode : t.lightMode}
-              enabled={darkMode}
-              onChange={toggleDarkMode}
-              onLabel={t.on}
-              offLabel={t.off}
-            />
-
             <Row
               icon={<Shield size={19} />}
               title={t.privacy}
@@ -474,69 +399,6 @@ function Row({
       {value && <span className="text-xs text-slate-500">{value}</span>}
       <ChevronRight size={16} className="text-slate-700" />
     </button>
-  );
-}
-
-function Toggle({
-  icon,
-  title,
-  enabled,
-  onChange,
-  onLabel,
-  offLabel,
-  onTest,
-}: {
-  icon: ReactNode;
-  title: string;
-  enabled: boolean;
-  onChange: () => void;
-  onLabel: string;
-  offLabel: string;
-  onTest?: () => void;
-}) {
-  return (
-    <div className="flex min-h-[60px] items-center gap-4 border-b border-white/[0.06] px-5">
-      <span className="text-slate-500">{icon}</span>
-      <button
-        type="button"
-        onClick={onChange}
-        className="flex-1 text-left text-sm font-medium text-white hover:text-teal-300"
-      >
-        {title}
-      </button>
-
-      {onTest && enabled && (
-        <button
-          type="button"
-          onClick={onTest}
-          className="hidden rounded-lg border border-white/[0.07] px-2.5 py-1.5 text-[10px] font-semibold text-slate-400 transition hover:bg-white/[0.04] hover:text-teal-300 sm:block"
-          title="Test read aloud"
-        >
-          Test
-        </button>
-      )}
-
-      <span className={`text-[10px] font-semibold uppercase tracking-wider ${enabled ? 'text-teal-300' : 'text-slate-600'}`}>
-        {enabled ? onLabel : offLabel}
-      </span>
-
-      <button
-        type="button"
-        role="switch"
-        aria-checked={enabled}
-        aria-label={title}
-        onClick={onChange}
-        className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-          enabled ? 'bg-[#00D394]' : 'bg-slate-700'
-        }`}
-      >
-        <span
-          className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
-            enabled ? 'left-6' : 'left-1'
-          }`}
-        />
-      </button>
-    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -15,14 +15,17 @@ import {
   Lightbulb,
   Link2,
   LockKeyhole,
+  LogOut,
   Menu,
   MessageSquare,
+  PanelLeftClose,
+  PanelLeftOpen,
   QrCode,
   Search,
   Settings,
   ShieldCheck,
+  User,
   UserCircle,
-  Volume2,
   X,
 } from 'lucide-react';
 
@@ -30,6 +33,7 @@ import {
   runImageScan,
   runTextScan,
   runUrlScan,
+  runDocumentScan,
 } from '@/lib/api';
 
 import { saveScanHistoryItem } from '@/lib/history';
@@ -51,6 +55,7 @@ import ResultsPanel from '@/components/analysis/ResultsPanel';
 import { LandingPage } from '@/components/home/LandingPage';
 import { LoginScreen } from '@/components/auth/LoginScreen';
 import { RegisterScreen } from '@/components/auth/RegisterScreen';
+import { ProfileModal } from '@/components/layout/ProfileModal';
 
 type InputType =
   | 'text'
@@ -69,6 +74,7 @@ interface Identity {
 export default function HomePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const resultContainerRef = useRef<HTMLDivElement | null>(null);
 
   // VIEW & AUTH STATE
   // Always start with 'home' view - landing page first
@@ -115,10 +121,51 @@ export default function HomePage() {
   const [mobileMenu, setMobileMenu] =
     useState(false);
 
+  const [collapsed, setCollapsed] =
+    useState(false);
+
+  const [darkMode, setDarkMode] =
+    useState(true);
+
+  const [profileOpen, setProfileOpen] =
+    useState(false);
+
+  const [profileMenuOpen, setProfileMenuOpen] =
+    useState(false);
+
   const [
     languageOpen,
     setLanguageOpen,
   ] = useState(false);
+
+  // Auto-scroll to result container when analysis completes
+  useEffect(() => {
+    if (result) {
+      const timer = setTimeout(() => {
+        resultContainerRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [result]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedTheme = window.localStorage.getItem('cyberraksha-theme');
+    setDarkMode(savedTheme === null ? true : savedTheme === 'dark');
+
+    const handleThemeChange = (event: Event) => {
+      const customEvent = event as CustomEvent<string>;
+      setDarkMode(customEvent.detail !== 'light');
+    };
+
+    window.addEventListener('cyberraksha-theme-change', handleThemeChange);
+    return () => window.removeEventListener('cyberraksha-theme-change', handleThemeChange);
+  }, []);
+
+
 
   /* =====================================================
      HANDLERS
@@ -138,6 +185,7 @@ export default function HomePage() {
     } catch {
       // Silent error
     }
+    setProfileMenuOpen(false);
     setIdentity(null);
     setView('home');
   };
@@ -203,13 +251,16 @@ export default function HomePage() {
     setSelectedFile(null);
 
     if (type === 'document') {
-      setError(homeText.documentUnavailable);
+      if (fileInputRef.current) {
+        fileInputRef.current.accept = '.pdf,.doc,.docx,.txt,.rtf,.odt,.csv,.log,text/*,application/pdf';
+        fileInputRef.current.click();
+      }
       return;
     }
 
     if (type === 'qr' || type === 'image') {
       if (fileInputRef.current) {
-        fileInputRef.current.accept = 'image/*';
+        fileInputRef.current.accept = 'image/*,image/png,image/jpeg,image/webp';
         fileInputRef.current.click();
       }
     }
@@ -232,11 +283,7 @@ export default function HomePage() {
     setError('');
     setResult(null);
 
-    void handleScan({
-      type: selectedType,
-      file,
-    });
-
+    // Allow selecting same file again later without auto-triggering output
     event.target.value = '';
   };
 
@@ -251,11 +298,17 @@ export default function HomePage() {
     type: InputType;
     file?: File;
   }) => {
-    if (type === 'document') {
-      setError(
-        homeText.documentUnavailable
-      );
+    const scanFile =
+      file ?? selectedFile;
 
+    if (type === 'document' && !scanFile) {
+      setError(
+        language === 'hi'
+          ? 'कृपया जाँच के लिए एक दस्तावेज़ चुनें।'
+          : language === 'mr'
+            ? 'कृपया तपासण्यासाठी एक दस्तऐवज निवडा.'
+            : 'Please choose a document to check.'
+      );
       return;
     }
 
@@ -272,9 +325,6 @@ export default function HomePage() {
 
       return;
     }
-
-    const scanFile =
-      file ?? selectedFile;
 
     if (
       (type === 'qr' ||
@@ -326,22 +376,35 @@ export default function HomePage() {
 
         response =
           await runImageScan(
-            file!,
+            scanFile!,
             'qr'
           );
       }
 
       /* IMAGE */
 
-      else {
+      else if (type === 'image') {
         previewText =
           scanFile?.name ||
           'Image';
 
         response =
           await runImageScan(
-            file!,
+            scanFile!,
             'image'
+          );
+      }
+
+      /* DOCUMENT */
+
+      else {
+        previewText =
+          scanFile?.name ||
+          'Document';
+
+        response =
+          await runDocumentScan(
+            scanFile!
           );
       }
 
@@ -350,16 +413,8 @@ export default function HomePage() {
       /* SAVE HISTORY */
 
       saveScanHistoryItem(
-        type === 'url'
-          ? 'url'
-          : type === 'qr'
-            ? 'qr'
-            : type === 'image'
-              ? 'image'
-              : 'text',
-
+        type,
         previewText,
-
         response
       );
     } catch (err: unknown) {
@@ -628,15 +683,28 @@ export default function HomePage() {
           </button>
         </div>
 
+        {/* COLLAPSE TOGGLE - Positioned cleanly ABOVE Home */}
+        <div className="px-4 pt-3 pb-1">
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className="flex h-9 w-full items-center gap-3 rounded-xl px-3 text-slate-500 transition hover:bg-white/[0.04] hover:text-slate-200"
+            title="Toggle Collapse"
+          >
+            <PanelLeftClose size={17} />
+            <span className="text-xs font-medium">Collapse</span>
+          </button>
+        </div>
+
         {/* =========================
-            NAVIGATION
+            NAVIGATION (Home, History, Safety Log, Safety Tips, Settings)
         ========================= */}
 
         <nav
           className="
             flex-1
             px-4
-            pt-5
+            pt-2
           "
         >
 
@@ -647,11 +715,11 @@ export default function HomePage() {
             label={navigationText.home}
             active
             onClick={() => {
-              router.push('/');
-
-              setMobileMenu(
-                false
-              );
+              setView('scan');
+              setText('');
+              setSelectedFile(null);
+              setResult(null);
+              setMobileMenu(false);
             }}
           />
 
@@ -679,9 +747,7 @@ export default function HomePage() {
                 size={19}
               />
             }
-            label={
-              navigationText.safetyLock
-            }
+            label="Safety Log"
             onClick={() => {
               router.push(
                 '/safety-lock'
@@ -705,24 +771,6 @@ export default function HomePage() {
             onClick={() => {
               router.push(
                 '/safety-tips'
-              );
-
-              setMobileMenu(
-                false
-              );
-            }}
-          />
-
-          <SidebarItem
-            icon={
-              <Flag size={19} />
-            }
-            label={
-              navigationText.reportScam
-            }
-            onClick={() => {
-              router.push(
-                '/report'
               );
 
               setMobileMenu(
@@ -1118,79 +1166,143 @@ export default function HomePage() {
           </div>
 
           {/* =========================
-              LISTEN
+              PROFILE DROPDOWN MENU
           ========================= */}
 
-          <button
-            type="button"
-            className="
-              flex h-10
-              items-center
-              gap-2
-
-              rounded-xl
-
-              border
-              border-white/[0.08]
-
-              bg-[#0E141A]
-
-              px-3
-
-              text-[13px]
-              text-[#00E6D0]
-
-              transition
-
-              hover:border-[#00E6D0]/30
-              hover:bg-[#121A21]
-            "
-          >
-            <Volume2
-              size={16}
-            />
-
-            <span
-              className="
-                hidden
-                sm:inline
-              "
+          <div className="relative">
+            <button
+              type="button"
+              aria-label={`Profile: ${identity?.name || 'Active User'}`}
+              title={`Logged in as ${identity?.name || 'Active User'}`}
+              onClick={() => setProfileMenuOpen((prev) => !prev)}
+              aria-haspopup="menu"
+              aria-expanded={profileMenuOpen}
+              className={`
+                flex h-10
+                items-center
+                gap-2.5
+                rounded-full
+                border
+                px-3
+                py-1.5
+                transition-all
+                duration-200
+                ${
+                  darkMode
+                    ? 'border-white/[0.08] bg-[#10171E] text-white hover:border-[#00E6D0]/40 hover:bg-[#151E27]'
+                    : 'border-slate-200 bg-white text-slate-800 hover:border-teal-500/40 hover:bg-slate-50 shadow-sm'
+                }
+              `}
             >
-              {homeText.listen}
-            </span>
-          </button>
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#00E6D0]/10 text-[#00E6D0]">
+                <User size={15} strokeWidth={2.4} />
+              </div>
+              <div className="hidden sm:flex flex-col text-left">
+                <span className={`max-w-[130px] truncate text-xs font-semibold leading-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                  {identity?.name || 'Active User'}
+                </span>
+                <span className="text-[9px] font-medium text-[#00E6D0] leading-none">
+                  Logged In
+                </span>
+              </div>
+              <ChevronDown
+                size={14}
+                className={`text-slate-400 transition-transform duration-200 ${
+                  profileMenuOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
-          {/* =========================
-              LOGOUT BUTTON
-          ========================= */}
+            {profileMenuOpen && (
+              <>
+                <button
+                  type="button"
+                  aria-label="Close profile menu"
+                  className="fixed inset-0 z-40 cursor-default"
+                  onClick={() => setProfileMenuOpen(false)}
+                />
 
-          <button
-            type="button"
-            aria-label="Logout"
-            onClick={handleLogout}
-            className="
-              flex h-10 w-10
-              items-center
-              justify-center
+                <div
+                  role="menu"
+                  className={`
+                    absolute
+                    right-0
+                    top-12
+                    z-50
+                    w-48
+                    overflow-hidden
+                    rounded-2xl
+                    border
+                    p-1.5
+                    shadow-2xl
+                    transition-all
+                    ${
+                      darkMode
+                        ? 'border-white/[0.08] bg-[#0E141A] text-white'
+                        : 'border-slate-200 bg-white text-slate-900 shadow-slate-200/60'
+                    }
+                  `}
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      setProfileOpen(true);
+                    }}
+                    className={`
+                      flex
+                      w-full
+                      items-center
+                      gap-2.5
+                      rounded-xl
+                      px-3
+                      py-2.5
+                      text-xs
+                      font-semibold
+                      transition
+                      text-left
+                      ${
+                        darkMode
+                          ? 'text-slate-200 hover:bg-white/[0.06] hover:text-[#00E6D0]'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-teal-700'
+                      }
+                    `}
+                  >
+                    <User size={15} />
+                    <span>View Profile</span>
+                  </button>
 
-              rounded-full
-
-              border
-              border-white/[0.08]
-
-              bg-[#182027]
-
-              transition
-
-              hover:bg-red-500/20
-              hover:text-red-400
-            "
-            title="Logout"
-          >
-            <UserCircle
-              size={21}
-            />
-          </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleLogout}
+                    className={`
+                      flex
+                      w-full
+                      items-center
+                      gap-2.5
+                      rounded-xl
+                      px-3
+                      py-2.5
+                      text-xs
+                      font-semibold
+                      transition
+                      text-left
+                      ${
+                        darkMode
+                          ? 'text-red-400 hover:bg-red-500/10'
+                          : 'text-red-600 hover:bg-red-50'
+                      }
+                    `}
+                  >
+                    <LogOut size={15} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
         </header>
 
@@ -1299,10 +1411,6 @@ export default function HomePage() {
                       option.type
                     }
                     type="button"
-                    disabled={
-                      option.type ===
-                      'document'
-                    }
                     onClick={() =>
                       handleTypeSelect(
                         option.type
@@ -1331,12 +1439,7 @@ export default function HomePage() {
                           : 'border-white/[0.08] bg-[#10151B] hover:-translate-y-0.5 hover:border-white/20 hover:bg-[#131A20]'
                       }
 
-                      ${
-                        option.type ===
-                        'document'
-                          ? 'cursor-not-allowed opacity-60'
-                          : 'cursor-pointer'
-                      }
+                      cursor-pointer
                     `}
                   >
 
@@ -1592,63 +1695,50 @@ export default function HomePage() {
 
                 {/* CHECK NOW */}
 
-                <button
-                  type="button"
-                  onClick={
-                    handleSubmit
-                  }
-                  disabled={
-                    loading
-                  }
-                  className="
-                    flex
-                    h-[46px]
+                {(() => {
+                  const hasValidInput = Boolean(
+                    (selectedType === 'text' || selectedType === 'url')
+                      ? text.trim().length > 0
+                      : selectedFile !== null
+                  );
 
-                    items-center
-                    justify-center
+                  return (
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={loading || !hasValidInput}
+                      className={`
+                        flex
+                        h-[46px]
+                        items-center
+                        justify-center
+                        gap-2
+                        rounded-[12px]
+                        px-5
+                        text-[13px]
+                        font-bold
+                        transition-all
+                        duration-300
+                        lg:w-[132px]
+                        lg:self-center
+                        ${
+                          hasValidInput && !loading
+                            ? 'bg-gradient-to-r from-[#00E6D0] via-[#24edd9] to-[#00CBB9] text-[#031310] shadow-[0_0_25px_rgba(0,230,208,0.55)] ring-2 ring-[#00E6D0]/80 hover:brightness-110 active:scale-[0.98]'
+                            : 'border border-white/[0.08] bg-white/[0.04] text-slate-400 opacity-50 cursor-not-allowed shadow-none'
+                        }
+                      `}
+                    >
+                      <Search
+                        size={16}
+                        strokeWidth={2.3}
+                      />
 
-                    gap-2
-
-                    rounded-[12px]
-
-                    bg-gradient-to-r
-                    from-[#00E6D0]
-                    to-[#00CBB9]
-
-                    px-5
-
-                    text-[13px]
-                    font-bold
-
-                    text-[#031310]
-
-                    shadow-[0_0_18px_rgba(0,230,208,0.10)]
-
-                    transition
-
-                    hover:brightness-110
-
-                    disabled:
-                    cursor-not-allowed
-
-                    disabled:
-                    opacity-50
-
-                    lg:w-[132px]
-                    lg:self-center
-                  "
-                >
-
-                  <Search
-                    size={16}
-                    strokeWidth={2.3}
-                  />
-
-                  {loading
-                    ? homeText.checking
-                    : homeText.checkNow}
-
-                </button>
+                      {loading
+                        ? homeText.checking
+                        : homeText.checkNow}
+                    </button>
+                  );
+                })()}
 
               </div>
 
@@ -1723,10 +1813,13 @@ export default function HomePage() {
 
           {result && (
             <div
+              ref={resultContainerRef}
+              id="scan-result-container"
               className="
                 mx-auto
                 mt-8
                 max-w-[1180px]
+                scroll-mt-6
               "
             >
               <ResultsPanel
@@ -1744,6 +1837,12 @@ export default function HomePage() {
         </section>
 
       </main>
+
+      <ProfileModal
+        isOpen={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        darkMode={darkMode}
+      />
 
     </div>
   );

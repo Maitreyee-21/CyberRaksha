@@ -270,19 +270,19 @@ export default function SafetyLockPage() {
 
   return (
     <AppShell>
-      <section className="px-5 py-10 sm:px-8 lg:px-10">
+      <section className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10">
         <div className="mx-auto max-w-[850px]">
           {/* HERO */}
           <div className="text-center">
             <div
-              className={`mx-auto flex h-24 w-24 items-center justify-center rounded-full transition ${
+              className={`mx-auto flex h-20 w-20 items-center justify-center rounded-full transition ${
                 enabled
                   ? 'bg-[#00E6D0]/10'
                   : 'bg-slate-500/10'
               }`}
             >
               <ShieldCheck
-                size={52}
+                size={44}
                 className={
                   enabled
                     ? 'text-[#00E6D0]'
@@ -291,12 +291,12 @@ export default function SafetyLockPage() {
               />
             </div>
 
-            <h1 className="mt-6 text-4xl font-bold">
+            <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
               Safety Lock
             </h1>
 
             <p
-              className={`mt-2 font-semibold ${
+              className={`mt-1.5 font-semibold ${
                 enabled
                   ? 'text-[#00E6D0]'
                   : 'text-slate-500'

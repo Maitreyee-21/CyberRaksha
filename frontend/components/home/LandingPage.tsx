@@ -686,9 +686,20 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-zinc-400">
-            <span>National Cyber Helpline: <b className="text-cyan-400">1930</b></span>
+            <span>
+              National Cyber Helpline:{' '}
+              <a
+                href="https://cybercrime.gov.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition"
+                title="National Cybercrime Reporting Portal (1930)"
+              >
+                1930
+              </a>
+            </span>
             <span>•</span>
-            <span>Official Portal: <b className="text-zinc-200">cybercrime.gov.in</b></span>
+            <span>Official Portal: <a href="https://cybercrime.gov.in/" target="_blank" rel="noopener noreferrer" className="font-bold text-zinc-200 hover:text-white underline underline-offset-2 transition">cybercrime.gov.in</a></span>
           </div>
         </div>
       </section>

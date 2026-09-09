@@ -250,17 +250,35 @@ export default function ReportPage() {
                 {text.nationalHelpline}
               </div>
 
-              <button
-                type="button"
-                onClick={callNationalHelpline}
-                className="mt-1 block text-3xl font-extrabold text-[#00E6D0] transition hover:opacity-80 focus:outline-none"
-                aria-label="Call cyber fraud helpline 1930"
+              <a
+                href="https://cybercrime.gov.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-block text-3xl font-extrabold text-[#00E6D0] transition hover:opacity-80 focus:outline-none underline decoration-[#00E6D0]/40 underline-offset-4"
+                aria-label="National cyber fraud helpline 1930"
+                title="Official National Cybercrime Reporting Portal (1930)"
               >
                 1930
-              </button>
+              </a>
 
               <div className="text-xs text-slate-500">
-                {text.helplineDescription}
+                {text.helplineDescription.includes('1930') ? (
+                  <>
+                    {text.helplineDescription.split('1930')[0]}
+                    <a
+                      href="https://cybercrime.gov.in/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold text-cyan-400 hover:text-cyan-300 underline underline-offset-2"
+                      title="National Cybercrime Reporting Portal (1930)"
+                    >
+                      1930
+                    </a>
+                    {text.helplineDescription.split('1930')[1]}
+                  </>
+                ) : (
+                  text.helplineDescription
+                )}
               </div>
             </div>
 

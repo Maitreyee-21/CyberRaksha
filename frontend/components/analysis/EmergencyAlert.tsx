@@ -403,7 +403,25 @@ export function EmergencyAlert({
                   className="text-teal-400 shrink-0 mt-0.5"
                 />
 
-                <span>{action}</span>
+                <span>
+                  {typeof action === 'string' && action.includes('1930') ? (
+                    <>
+                      {action.split('1930')[0]}
+                      <a
+                        href="https://cybercrime.gov.in/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-bold text-cyan-400 hover:text-cyan-300 underline underline-offset-2"
+                        title="National Cybercrime Reporting Portal (1930)"
+                      >
+                        1930
+                      </a>
+                      {action.split('1930')[1]}
+                    </>
+                  ) : (
+                    action
+                  )}
+                </span>
               </div>
             ))}
           </div>

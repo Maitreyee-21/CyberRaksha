@@ -548,8 +548,11 @@ export function GuidancePanel({
 
           <div className="grid sm:grid-cols-2 gap-2">
             <a
-              href="tel:1930"
+              href="https://cybercrime.gov.in/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-3 rounded-xl border border-[#e0d7c7] bg-[#faf8f2] p-3 hover:border-[#c89422] transition"
+              title="Official National Cybercrime Reporting Portal (Helpline 1930)"
             >
               <div className="w-8 h-8 rounded-lg bg-[#fff0ed] text-[#b33d32] flex items-center justify-center">
                 <Phone size={15} />

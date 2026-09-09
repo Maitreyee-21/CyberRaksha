@@ -51,6 +51,12 @@ interface SidebarProps {
   onCloseMobile: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  history?: ScanHistoryItem[];
+  currentId?: string | null;
+  onSelectScan?: (item: ScanHistoryItem) => void;
+  onNewScan?: () => void;
+  onDeleteScan?: (id: string, e: React.MouseEvent) => void;
+  onClearHistory?: () => void;
 }
 
 export function Sidebar({
@@ -58,6 +64,11 @@ export function Sidebar({
   onCloseMobile,
   collapsed,
   onToggleCollapse,
+  history: propHistory,
+  onSelectScan,
+  onNewScan,
+  onDeleteScan,
+  onClearHistory,
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -78,6 +89,8 @@ export function Sidebar({
     useState<ScanHistoryItem[]>(
       []
     );
+
+  const historyItems = propHistory ?? history;
 
   const [safetyLockEnabled, setSafetyLockEnabled] =
     useState(true);
@@ -113,7 +126,7 @@ export function Sidebar({
   const navigation = [
     {
       label: navigationText.home,
-      path: '/',
+      path: '/scan',
       icon: Home,
     },
     {
@@ -122,7 +135,7 @@ export function Sidebar({
       icon: History,
     },
     {
-      label: navigationText.safetyLock,
+      label: language === 'en' ? 'Safety Log' : navigationText.safetyLock,
       path: '/safety-lock',
       icon: ShieldCheck,
     },
@@ -130,11 +143,6 @@ export function Sidebar({
       label: navigationText.safetyTips,
       path: '/safety-tips',
       icon: Lightbulb,
-    },
-    {
-      label: navigationText.reportScam,
-      path: '/report',
-      icon: Flag,
     },
     {
       label: navigationText.settings,
@@ -146,73 +154,11 @@ export function Sidebar({
   const active = (
     path: string
   ) => {
-    if (path === '/') {
-      return pathname === '/';
+    if (path === '/scan') {
+      return pathname === '/scan' || pathname === '/';
     }
 
     return pathname.startsWith(path);
-  };
-
-  const historyIcon = (
-    type: string
-  ) => {
-    switch (type) {
-      case 'url':
-        return (
-          <Link2 size={14} />
-        );
-
-      case 'qr':
-        return (
-          <QrCode size={14} />
-        );
-
-      case 'image':
-        return (
-          <ImageIcon size={14} />
-        );
-
-      default:
-        return (
-          <MessageSquare
-            size={14}
-          />
-        );
-    }
-  };
-
-  const riskColor = (
-    risk: string
-  ) => {
-    switch (
-      String(risk).toUpperCase()
-    ) {
-      case 'HIGH':
-        return 'bg-red-400';
-
-      case 'MEDIUM':
-        return 'bg-amber-400';
-
-      default:
-        return 'bg-emerald-400';
-    }
-  };
-
-  const removeHistory = (
-    id: string,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation();
-
-    const updated =
-      deleteScanHistoryItem(id);
-
-    setHistory(updated);
-  };
-
-  const clearHistory = () => {
-    clearAllScanHistory();
-    setHistory([]);
   };
 
   return (
@@ -255,7 +201,7 @@ export function Sidebar({
         {/* BRAND */}
         <div
           className={`
-            flex h-[92px] shrink-0
+            flex h-[76px] shrink-0
             items-center
             border-b border-white/[0.06]
 
@@ -270,14 +216,14 @@ export function Sidebar({
           <button
             type="button"
             onClick={() =>
-              navigate('/')
+              navigate('/scan')
             }
             className="flex items-center gap-3"
           >
 
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#00E6D0]/10">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#00E6D0]/10">
               <ShieldCheck
-                size={30}
+                size={26}
                 strokeWidth={1.8}
                 className="text-[#00E6D0]"
               />
@@ -285,14 +231,14 @@ export function Sidebar({
 
             {!collapsed && (
               <div className="text-left">
-                <div className="text-[22px] font-extrabold tracking-tight">
+                <div className="text-[20px] font-extrabold tracking-tight">
                   Cyber
                   <span className="text-[#00E6D0]">
                     Raksha
                   </span>
                 </div>
 
-                <div className="text-[10px] text-slate-600">
+                <div className="text-[10px] text-slate-500">
                   Be Aware. Be Safer.
                 </div>
               </div>
@@ -311,26 +257,32 @@ export function Sidebar({
 
         </div>
 
-        {/* NEW CHECK */}
+        {/* NEW CHECK BUTTON */}
         <div
           className={
             collapsed
-              ? 'px-3 pt-4'
-              : 'px-5 pt-4'
+              ? 'px-3 pt-3'
+              : 'px-5 pt-3'
           }
         >
           <button
             type="button"
-            onClick={() =>
-              navigate('/scan')
-            }
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('cyberraksha-new-scan'));
+              }
+              if (onNewScan) {
+                onNewScan();
+              }
+              navigate('/scan');
+            }}
             title={
               collapsed
                 ? "New Check"
                 : undefined
             }
             className={`
-              flex h-11 w-full
+              flex h-10 w-full
               items-center rounded-xl
               bg-[#00E6D0]/10
               text-[#00E6D0]
@@ -339,24 +291,72 @@ export function Sidebar({
               ${
                 collapsed
                   ? 'justify-center'
-                  : 'gap-3 px-4'
+                  : 'gap-3 px-3.5'
               }
             `}
           >
-            <Plus size={19} />
+            <Plus size={18} />
 
             {!collapsed && (
-              <span className="font-bold">
+              <span className="text-xs font-bold">
                 New Check
               </span>
             )}
           </button>
         </div>
 
-        {/* NAVIGATION */}
+        {/* COLLAPSE TOGGLE - Cleanly positioned ABOVE the Home navigation item */}
+        <div
+          className={
+            collapsed
+              ? 'mt-2.5 px-3'
+              : 'mt-2.5 px-5'
+          }
+        >
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            title={
+              collapsed
+                ? 'Expand sidebar'
+                : 'Collapse sidebar'
+            }
+            className={`
+              flex h-9 w-full
+              items-center rounded-xl
+              text-slate-500
+              transition
+              hover:bg-white/[0.04]
+              hover:text-slate-200
+              ${
+                collapsed
+                  ? 'justify-center'
+                  : 'gap-3 px-3.5'
+              }
+            `}
+          >
+            {collapsed ? (
+              <PanelLeftOpen
+                size={17}
+              />
+            ) : (
+              <>
+                <PanelLeftClose
+                  size={17}
+                />
+
+                <span className="text-xs font-medium">
+                  Collapse
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* NAVIGATION (Home, History, Safety Log, Safety Tips, Settings) */}
         <nav
           className={`
-            mt-4
+            mt-2 flex-1
             ${
               collapsed
                 ? 'px-3'
@@ -392,8 +392,8 @@ export function Sidebar({
                       : undefined
                   }
                   className={`
-                    relative mb-1.5
-                    flex h-11 w-full
+                    relative mb-1
+                    flex h-10 w-full
                     items-center
                     rounded-xl
                     transition-all
@@ -401,7 +401,7 @@ export function Sidebar({
                     ${
                       collapsed
                         ? 'justify-center'
-                        : 'gap-4 px-4'
+                        : 'gap-3.5 px-3.5'
                     }
 
                     ${
@@ -417,16 +417,16 @@ export function Sidebar({
                   )}
 
                   <Icon
-                    size={21}
+                    size={19}
                     strokeWidth={
                       isCurrent
-                        ? 2.4
+                        ? 2.3
                         : 1.8
                     }
                   />
 
                   {!collapsed && (
-                    <span className="text-[14px] font-medium">
+                    <span className="text-[13px] font-medium">
                       {item.label}
                     </span>
                   )}
@@ -438,175 +438,12 @@ export function Sidebar({
 
         </nav>
 
-        {/* COLLAPSE BUTTON */}
+        {/* PROTECTED FOOTER */}
         <div
           className={
             collapsed
-              ? 'mt-2 px-3'
-              : 'mt-2 px-5'
-          }
-        >
-          <button
-            type="button"
-            onClick={
-              onToggleCollapse
-            }
-            title={
-              collapsed
-                ? 'Expand sidebar'
-                : 'Collapse sidebar'
-            }
-            className={`
-              flex h-10 w-full
-              items-center rounded-xl
-              text-slate-600
-              transition
-              hover:bg-white/[0.04]
-              hover:text-slate-300
-
-              ${
-                collapsed
-                  ? 'justify-center'
-                  : 'gap-3 px-4'
-              }
-            `}
-          >
-            {collapsed ? (
-              <PanelLeftOpen
-                size={18}
-              />
-            ) : (
-              <>
-                <PanelLeftClose
-                  size={18}
-                />
-
-                <span className="text-xs">
-                  Collapse
-                </span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* RECENT CHECKS */}
-        {!collapsed && (
-          <div className="mt-4 flex min-h-0 flex-1 flex-col px-5">
-
-            <div className="flex items-center justify-between">
-
-              <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">
-                Recent Checks
-              </span>
-
-              {history.length >
-                0 && (
-                <button
-                  type="button"
-                  onClick={
-                    clearHistory
-                  }
-                  className="text-[10px] text-slate-600 hover:text-red-400"
-                >
-                  Clear
-                </button>
-              )}
-
-            </div>
-
-            <div className="custom-scrollbar mt-2 flex-1 overflow-y-auto">
-
-              {history.length ===
-              0 ? (
-                <div className="rounded-xl border border-white/[0.05] bg-white/[0.02] p-4 text-center text-[11px] leading-5 text-slate-600">
-                  No recent checks.
-                  <br />
-                  Start a new check.
-                </div>
-              ) : (
-                <div className="space-y-1">
-
-                  {history
-                    .slice(0, 5)
-                    .map(
-                      (item) => (
-                        <div
-                          key={item.id}
-                          className="group flex w-full items-center gap-2 rounded-lg p-1.5 text-left hover:bg-white/[0.035]"
-                        >
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(
-                                `/history?id=${item.id}`
-                              )
-                            }
-                            className="flex min-w-0 flex-1 items-center gap-2 rounded-lg p-1.5 text-left"
-                            title="Open this check"
-                          >
-
-                          <span
-                            className={`h-1.5 w-1.5 shrink-0 rounded-full ${riskColor(
-                              item
-                                .result
-                                .risk_level
-                            )}`}
-                          />
-
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#121A21] text-slate-500">
-                            {historyIcon(
-                              item.inputType
-                            )}
-                          </span>
-
-                          <span className="min-w-0 flex-1">
-
-                            <span className="block truncate text-[10px] font-semibold text-slate-400">
-                              {
-                                item
-                                  .result
-                                  .scam_category
-                              }
-                            </span>
-
-                            <span className="block truncate text-[9px] text-slate-600">
-                              {
-                                item.snippet
-                              }
-                            </span>
-
-                          </span>
-
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={(event) =>
-                              removeHistory(item.id, event)
-                            }
-                            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-600 hover:bg-red-500/10 hover:text-red-400 group-hover:flex"
-                            aria-label="Delete this recent check"
-                            title="Delete check"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      )
-                    )}
-
-                </div>
-              )}
-
-            </div>
-          </div>
-        )}
-
-        {/* PROTECTED */}
-        <div
-          className={
-            collapsed
-              ? 'p-3'
-              : 'p-5'
+              ? 'p-2.5 shrink-0'
+              : 'p-4 shrink-0'
           }
         >
 
@@ -629,8 +466,8 @@ export function Sidebar({
 
               ${
                 collapsed
-                  ? 'flex h-11 items-center justify-center'
-                  : 'p-3'
+                  ? 'flex h-10 items-center justify-center'
+                  : 'p-2.5'
               }
             `}
           >

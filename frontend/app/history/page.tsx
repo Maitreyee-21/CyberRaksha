@@ -9,6 +9,7 @@ import {
   Link2,
   QrCode,
   Image as ImageIcon,
+  FileText,
   ChevronDown,
   ExternalLink,
   ShieldCheck,
@@ -54,6 +55,7 @@ export default function HistoryPage() {
       const searchable = [
         item.snippet,
         item.inputType,
+        getScanTypeLabel(item.inputType),
         result.scam_category,
         result.summary,
         result.risk_level,
@@ -71,17 +73,39 @@ export default function HistoryPage() {
   }, [history, search]);
 
   const getIcon = (type: string) => {
-    if (type === 'url') return <Link2 size={20} />;
-    if (type === 'qr') return <QrCode size={20} />;
-    if (type === 'image') return <ImageIcon size={20} />;
-    return <MessageSquare size={20} />;
+    switch (type?.toLowerCase()) {
+      case 'url':
+      case 'link':
+        return <Link2 size={20} />;
+      case 'qr':
+      case 'qrcode':
+        return <QrCode size={20} />;
+      case 'image':
+        return <ImageIcon size={20} />;
+      case 'document':
+        return <FileText size={20} />;
+      default:
+        return <MessageSquare size={20} />;
+    }
   };
 
-  const getTypeLabel = (type: string) => {
-    if (type === 'url') return 'Link';
-    if (type === 'qr') return 'QR Code';
-    if (type === 'image') return 'Image';
-    return 'Message';
+  const getScanTypeLabel = (type: string): string => {
+    switch (type?.toLowerCase()) {
+      case 'url':
+      case 'link':
+        return 'Link Scan';
+      case 'qr':
+      case 'qrcode':
+        return 'QR Code Scan';
+      case 'image':
+        return 'Image Scan';
+      case 'document':
+        return 'Document Scan';
+      case 'text':
+      case 'message':
+      default:
+        return 'Message Scan';
+    }
   };
 
   const getStatus = (risk: string): RiskStatus => {
@@ -134,7 +158,7 @@ export default function HistoryPage() {
 
   return (
     <AppShell>
-      <section className="px-5 py-10 sm:px-8 lg:px-10">
+      <section className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10">
         <div className="mx-auto max-w-[1000px]">
           {/* HEADER */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -241,12 +265,14 @@ export default function HistoryPage() {
                       >
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="truncate text-sm font-semibold text-white">
-                            {result.scam_category || 'Safety Check'}
+                            {getScanTypeLabel(item.inputType)}
                           </span>
 
-                          <span className="rounded-full bg-white/[0.04] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
-                            {getTypeLabel(item.inputType)}
-                          </span>
+                          {result.scam_category && !result.scam_category.toLowerCase().includes('benign') && (
+                            <span className="rounded-full bg-red-500/10 border border-red-500/20 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-red-400">
+                              {result.scam_category}
+                            </span>
+                          )}
                         </div>
 
                         <div className="mt-1 truncate text-xs text-slate-600">
@@ -323,8 +349,9 @@ export default function HistoryPage() {
                             icon={<ExternalLink size={16} />}
                             label="Category"
                             value={
-                              result.scam_category ||
-                              'Suspicious Content'
+                              result.scam_category && !result.scam_category.toLowerCase().includes('benign')
+                                ? result.scam_category
+                                : getScanTypeLabel(item.inputType)
                             }
                           />
                         </div>

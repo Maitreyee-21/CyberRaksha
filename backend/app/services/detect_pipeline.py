@@ -40,6 +40,10 @@ def detect_content_type(request_body: Dict[str, Any]) -> Tuple[InputType, str, L
             detected_urls.append(url)
 
     if itype == InputType.URL and url:
+        if not url.startswith(("http://", "https://")):
+            url = f"https://{url}"
+        if url not in detected_urls:
+            detected_urls.append(url)
         combined_text = f"URL TO ANALYZE: {url}\n\n"
         page_text = _scrape_url_text(url) if settings.ALLOW_REMOTE_URL_FETCH else "[Remote page fetch disabled by default; URL structure will be analyzed locally.]"
         combined_text += f"EXTRACTED PAGE CONTENT (first 4000 chars):\n{page_text[:4000]}"
@@ -120,6 +124,21 @@ def detect_content_type(request_body: Dict[str, Any]) -> Tuple[InputType, str, L
         # Even when OCR finds nothing, return the image-analysis marker so the
         # downstream pipeline can report that the screenshot could not be read
         # instead of silently treating it as ordinary text.
+        return itype, combined.strip(), list(dict.fromkeys(detected_urls)), None
+
+    if itype == InputType.DOCUMENT:
+        doc_text = text_content.strip()
+        if not doc_text and image_b64:
+            doc_text = _ocr_fallback(image_b64).strip()
+        if doc_text:
+            detected_urls.extend(URL_REGEX.findall(doc_text))
+        combined = (
+            "DOCUMENT CONTENT ANALYSIS:\n"
+            "--- EXTRACTED DOCUMENT TEXT ---\n"
+            f"{doc_text or '[No readable text content found in document]'}\n\n"
+            "--- DETECTED URLS FROM DOCUMENT ---\n"
+            f"{', '.join(dict.fromkeys(detected_urls)) or 'None'}"
+        )
         return itype, combined.strip(), list(dict.fromkeys(detected_urls)), None
 
     return itype, text_content.strip(), detected_urls, None

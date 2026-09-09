@@ -37,6 +37,7 @@ interface ResultsPanelProps {
   result: ScanResult | null;
   loading: boolean;
   error: string | null;
+  onReset?: () => void;
 }
 
 type ResultCopy = {
@@ -313,7 +314,7 @@ function ResultIllustration({ state }: { state: 'safe' | 'caution' | 'unsafe' })
   );
 }
 
-export default function ResultsPanel({ result, loading, error }: ResultsPanelProps) {
+export default function ResultsPanel({ result, loading, error, onReset }: ResultsPanelProps) {
   const router = useRouter();
   const { language } = useLanguage();
   const t = translations[language] ?? en;
@@ -322,10 +323,25 @@ export default function ResultsPanel({ result, loading, error }: ResultsPanelPro
   const [showEmergency, setShowEmergency] = React.useState(false);
   const [showDetails, setShowDetails] = React.useState(false);
   const [shareStatus, setShareStatus] = React.useState<string | null>(null);
+  const detailsRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (result?.emergency_alert) setShowEmergency(true);
   }, [result?.emergency_alert, result]);
+
+  const handleToggleDetails = () => {
+    if (!showDetails) {
+      setShowDetails(true);
+      setTimeout(() => {
+        detailsRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 80);
+    } else {
+      setShowDetails(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -553,7 +569,15 @@ export default function ResultsPanel({ result, loading, error }: ResultsPanelPro
             <div className="mx-auto mt-4 max-w-[680px]">
               <button
                 type="button"
-                onClick={() => router.push('/scan')}
+                onClick={() => {
+                  if (onReset) {
+                    onReset();
+                  }
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('cyberraksha-new-scan'));
+                  }
+                  router.push('/scan');
+                }}
                 className={`flex h-14 w-full items-center justify-center gap-2 rounded-xl px-6 text-base font-bold text-white shadow-lg transition active:scale-[0.99] ${state === 'safe' ? 'bg-emerald-500 hover:bg-emerald-400' : state === 'caution' ? 'bg-amber-500 hover:bg-amber-400' : 'bg-rose-500 hover:bg-rose-400'}`}
               >
                 <RefreshCw size={19} />
@@ -574,7 +598,7 @@ export default function ResultsPanel({ result, loading, error }: ResultsPanelPro
 
                 <button
                   type="button"
-                  onClick={() => setShowDetails((value) => !value)}
+                  onClick={handleToggleDetails}
                   className={`flex h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#0E1A22] px-4 text-sm font-semibold text-slate-200 transition hover:bg-[#13222C] ${state === 'unsafe' ? '' : 'col-span-1'}`}
                 >
                   <FileText size={17} />
@@ -607,11 +631,14 @@ export default function ResultsPanel({ result, loading, error }: ResultsPanelPro
               </div>
             </div>
             <a
-              href={`tel:${t.helpline}`}
-              className="text-center"
+              href="https://cybercrime.gov.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-center group transition"
+              title="Official National Cybercrime Reporting Portal (Helpline 1930)"
             >
-              <div className="text-3xl font-black text-white">{t.helpline}</div>
-              <div className="text-[10px] text-slate-500">{t.helplineAvailability}</div>
+              <div className="text-3xl font-black text-white group-hover:text-cyan-400 transition">{t.helpline}</div>
+              <div className="text-[10px] text-slate-500 group-hover:text-cyan-400/80 transition underline underline-offset-2">{t.helplineAvailability}</div>
             </a>
           </div>
           <div className={`border-t border-white/[0.06] px-5 py-4 text-center text-sm italic ${accentClasses.text}`}>
@@ -621,7 +648,7 @@ export default function ResultsPanel({ result, loading, error }: ResultsPanelPro
 
         {/* TECHNICAL DETAILS — hidden until requested */}
         {showDetails && (
-          <div className="space-y-4">
+          <div ref={detailsRef} id="scan-details-section" className="space-y-4 pt-2 scroll-mt-6">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.06] bg-[#0D1319] px-4 py-3">
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <ShieldCheck size={15} className="text-teal-400" />

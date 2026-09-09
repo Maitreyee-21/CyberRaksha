@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
-export type InputType = 'text' | 'image' | 'url' | 'qr';
+export type InputType = 'text' | 'image' | 'url' | 'qr' | 'document';
 
 export interface ScamDNA {
   urgency: number;

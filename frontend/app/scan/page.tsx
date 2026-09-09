@@ -23,6 +23,7 @@ import {
   runTextScan,
   runUrlScan,
   runImageScan,
+  runDocumentScan,
 } from '@/lib/api';
 
 import { saveScanHistoryItem } from '@/lib/history';
@@ -50,6 +51,10 @@ function ScanPageContent() {
 
   const fileInputRef =
     useRef<HTMLInputElement | null>(null);
+  const resultContainerRef =
+    useRef<HTMLDivElement | null>(null);
+  const abortControllerRef =
+    useRef<AbortController | null>(null);
 
   const [selectedType, setSelectedType] =
     useState<InputType>('text');
@@ -61,6 +66,45 @@ function ScanPageContent() {
   const [result, setResult] =
     useState<ScanResult | null>(null);
 
+  const handleReset = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+    setError('');
+    setResult(null);
+    setText('');
+    setSelectedFile(null);
+    setSelectedType('text');
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const onNewScanEvent = () => {
+      handleReset();
+    };
+    window.addEventListener('cyberraksha-new-scan', onNewScanEvent);
+    return () => {
+      window.removeEventListener('cyberraksha-new-scan', onNewScanEvent);
+    };
+  }, []);
+
+  // Automatically smooth-scroll down to the result container when analysis completes
+  useEffect(() => {
+    if (result) {
+      const timer = setTimeout(() => {
+        resultContainerRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [result]);
+
   useEffect(() => {
     const type = searchParams.get('type');
 
@@ -68,9 +112,10 @@ function ScanPageContent() {
       type === 'text' ||
       type === 'url' ||
       type === 'qr' ||
-      type === 'image'
+      type === 'image' ||
+      type === 'document'
     ) {
-      setSelectedType(type);
+      setSelectedType(type as InputType);
       setError('');
       setSelectedFile(null);
       setText('');
@@ -215,11 +260,11 @@ function ScanPageContent() {
       gradient: 'from-[#FF536C] to-[#E52E50]',
       description:
         language === 'hi'
-          ? 'दस्तावेज़ स्कैनिंग जल्द उपलब्ध होगी।'
+          ? 'पीडीएफ और दस्तावेज़ों की सुरक्षा जाँच करें।'
           : language === 'mr'
-            ? 'दस्तऐवज स्कॅनिंग लवकरच उपलब्ध होईल.'
-            : 'Document scanning will be available soon.',
-      disabled: true,
+            ? 'पीडीएफ आणि दस्तऐवजांची सुरक्षा तपासा.'
+            : 'Check PDF, DOCX, or text documents for threats.',
+      disabled: false,
     },
   ];
 
@@ -230,12 +275,7 @@ function ScanPageContent() {
     setSelectedFile(null);
     setText('');
 
-    if (type === 'document') {
-      setError(copy.documentUnavailable);
-      return;
-    }
-
-    if (type === 'qr' || type === 'image') {
+    if (type === 'qr' || type === 'image' || type === 'document') {
       window.setTimeout(() => {
         fileInputRef.current?.click();
       }, 50);
@@ -260,7 +300,8 @@ function ScanPageContent() {
   const openFilePicker = () => {
     if (
       selectedType === 'qr' ||
-      selectedType === 'image'
+      selectedType === 'image' ||
+      selectedType === 'document'
     ) {
       fileInputRef.current?.click();
     }
@@ -274,11 +315,6 @@ function ScanPageContent() {
 
   const handleScan = async () => {
     setError('');
-
-    if (selectedType === 'document') {
-      setError(copy.documentUnavailable);
-      return;
-    }
 
     if (
       (selectedType === 'text' ||
@@ -295,14 +331,27 @@ function ScanPageContent() {
 
     if (
       (selectedType === 'qr' ||
-        selectedType === 'image') &&
+        selectedType === 'image' ||
+        selectedType === 'document') &&
       !selectedFile
     ) {
       setError(
-        copy.imageRequired
+        selectedType === 'document'
+          ? (language === 'hi'
+              ? 'कृपया जाँच के लिए एक दस्तावेज़ चुनें।'
+              : language === 'mr'
+                ? 'कृपया तपासण्यासाठी एक दस्तऐवज निवडा.'
+                : 'Please choose a document to check.')
+          : copy.imageRequired
       );
       return;
     }
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     setLoading(true);
     setResult(null);
@@ -323,28 +372,32 @@ function ScanPageContent() {
           selectedFile!,
           'qr'
         );
-      } else {
+      } else if (selectedType === 'image') {
         preview = selectedFile?.name || 'Image';
         response = await runImageScan(
           selectedFile!,
           'image'
         );
+      } else {
+        preview = selectedFile?.name || 'Document';
+        response = await runDocumentScan(selectedFile!);
+      }
+
+      if (controller.signal.aborted) {
+        return;
       }
 
       setResult(response);
 
       saveScanHistoryItem(
-        selectedType === 'url'
-          ? 'url'
-          : selectedType === 'qr'
-            ? 'qr'
-            : selectedType === 'image'
-              ? 'image'
-              : 'text',
+        selectedType,
         preview,
         response
       );
     } catch (err: unknown) {
+      if (controller.signal.aborted) {
+        return;
+      }
       const message =
         err instanceof Error
           ? err.message
@@ -352,7 +405,10 @@ function ScanPageContent() {
 
       setError(message || copy.scanError);
     } finally {
-      setLoading(false);
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+        setLoading(false);
+      }
     }
   };
 
@@ -380,6 +436,19 @@ function ScanPageContent() {
 
   return (
     <AppShell>
+      {/* HIDDEN FILE INPUT */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept={
+          selectedType === 'document'
+            ? '.pdf,.doc,.docx,.txt,.rtf,.odt,.csv,.log,text/*,application/pdf'
+            : 'image/*,image/png,image/jpeg,image/webp'
+        }
+        onChange={handleFileChange}
+      />
+
       <section
         className="min-h-screen px-4 pb-20 pt-8 sm:px-6 sm:pt-10 lg:px-10"
         dir={currentLanguage.rtl ? 'rtl' : 'ltr'}
@@ -580,7 +649,14 @@ function ScanPageContent() {
                         loading || !text.trim()
                       }
                       onClick={() => void handleScan()}
-                      className="flex h-[50px] min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#00E6D0] px-6 text-sm font-bold text-[#041311] transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                      className={`
+                        flex h-[50px] min-w-[145px] items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold transition-all duration-300
+                        ${
+                          text.trim() && !loading
+                            ? 'bg-gradient-to-r from-[#00E6D0] via-[#24edd9] to-[#00CBB9] text-[#041311] shadow-[0_0_25px_rgba(0,230,208,0.55)] ring-2 ring-[#00E6D0]/80 hover:brightness-110 active:scale-[0.98]'
+                            : 'border border-white/[0.08] bg-white/[0.04] text-slate-400 opacity-50 cursor-not-allowed shadow-none'
+                        }
+                      `}
                     >
                       <Search size={17} />
                       {loading
@@ -591,51 +667,80 @@ function ScanPageContent() {
                 </div>
               )}
 
-              {/* QR / IMAGE */}
+              {/* QR / IMAGE / DOCUMENT */}
               {(selectedType === 'qr' ||
-                selectedType === 'image') && (
+                selectedType === 'image' ||
+                selectedType === 'document') && (
                 <div className="p-4">
                   {!selectedFile ? (
-                    <button
-                      type="button"
-                      onClick={openFilePicker}
-                      className="group flex min-h-[180px] w-full flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.12] bg-[#11181F] px-5 transition hover:border-[#00E6D0]/30 hover:bg-[#121B20]"
-                    >
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#00E6D0]/10 transition group-hover:scale-105">
-                        <Upload
-                          size={19}
-                          className="text-[#00E6D0]"
-                        />
+                    <div>
+                      <button
+                        type="button"
+                        onClick={openFilePicker}
+                        className="group flex min-h-[180px] w-full flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.12] bg-[#11181F] px-5 transition hover:border-[#00E6D0]/30 hover:bg-[#121B20]"
+                      >
+                        <div className={`flex h-11 w-11 items-center justify-center rounded-full transition group-hover:scale-105 ${
+                          selectedType === 'document'
+                            ? 'bg-[#FF536C]/10 text-[#FF536C]'
+                            : selectedType === 'qr'
+                              ? 'bg-[#FFB12C]/10 text-[#FFB12C]'
+                              : 'bg-[#18D77B]/10 text-[#18D77B]'
+                        }`}>
+                          {selectedType === 'document' ? (
+                            <FileText size={20} />
+                          ) : selectedType === 'qr' ? (
+                            <QrCode size={20} />
+                          ) : (
+                            <Upload size={20} />
+                          )}
+                        </div>
+
+                        <p className="mt-4 text-sm font-semibold text-white">
+                          {selectedType === 'qr'
+                            ? copy.qr
+                            : selectedType === 'image'
+                              ? copy.image
+                              : copy.document}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-500">
+                          {selectedType === 'document'
+                            ? 'PDF, DOCX, TXT, CSV'
+                            : 'PNG, JPG, WEBP'}
+                        </p>
+
+                        <span className="mt-4 rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-medium text-slate-300 transition group-hover:border-[#00E6D0]/40 group-hover:text-white">
+                          Choose File
+                        </span>
+                      </button>
+
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          type="button"
+                          disabled={true}
+                          className="flex h-[50px] min-w-[145px] items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-6 text-sm font-bold text-slate-400 opacity-50 cursor-not-allowed shadow-none"
+                        >
+                          <Search size={17} />
+                          {copy.checkNow}
+                        </button>
                       </div>
-
-                      <p className="mt-4 text-sm font-semibold text-white">
-                        {selectedType === 'qr'
-                          ? copy.qr
-                          : copy.image}
-                      </p>
-
-                      <p className="mt-1 text-xs text-slate-500">
-                        PNG, JPG, WEBP
-                      </p>
-
-                      <span className="mt-4 rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-medium text-slate-300">
-                        Choose File
-                      </span>
-                    </button>
+                    </div>
                   ) : (
                     <div className="rounded-xl border border-white/[0.07] bg-[#11181F] p-4">
                       <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#00E6D0]/10">
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                          selectedType === 'document'
+                            ? 'bg-[#FF536C]/15 text-[#FF536C]'
+                            : selectedType === 'qr'
+                              ? 'bg-[#FFB12C]/15 text-[#FFB12C]'
+                              : 'bg-[#18D77B]/15 text-[#18D77B]'
+                        }`}>
                           {selectedType === 'qr' ? (
-                            <QrCode
-                              size={19}
-                              className="text-[#00E6D0]"
-                            />
+                            <QrCode size={19} />
+                          ) : selectedType === 'image' ? (
+                            <ImageIcon size={19} />
                           ) : (
-                            <ImageIcon
-                              size={19}
-                              className="text-[#00E6D0]"
-                            />
+                            <FileText size={19} />
                           )}
                         </div>
 
@@ -645,10 +750,9 @@ function ScanPageContent() {
                           </p>
 
                           <p className="mt-1 text-xs text-slate-500">
-                            {(
-                              selectedFile.size / 1024
-                            ).toFixed(1)}{' '}
-                            KB
+                            {selectedFile.size > 1024 * 1024
+                              ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`
+                              : `${(selectedFile.size / 1024).toFixed(1)} KB`}
                           </p>
                         </div>
 
@@ -666,9 +770,16 @@ function ScanPageContent() {
                       <div className="mt-4 flex justify-end">
                         <button
                           type="button"
-                          disabled={loading}
+                          disabled={loading || !selectedFile}
                           onClick={() => void handleScan()}
-                          className="flex h-[50px] min-w-[145px] items-center justify-center gap-2 rounded-xl bg-[#00E6D0] px-6 text-sm font-bold text-[#041311] transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                          className={`
+                            flex h-[50px] min-w-[145px] items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold transition-all duration-300
+                            ${
+                              selectedFile && !loading
+                                ? 'bg-gradient-to-r from-[#00E6D0] via-[#24edd9] to-[#00CBB9] text-[#041311] shadow-[0_0_25px_rgba(0,230,208,0.55)] ring-2 ring-[#00E6D0]/80 hover:brightness-110 active:scale-[0.98]'
+                                : 'border border-white/[0.08] bg-white/[0.04] text-slate-400 opacity-50 cursor-not-allowed shadow-none'
+                            }
+                          `}
                         >
                           <Search size={17} />
                           {loading
@@ -678,28 +789,6 @@ function ScanPageContent() {
                       </div>
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* DOCUMENT */}
-              {selectedType === 'document' && (
-                <div className="p-5">
-                  <div className="flex min-h-[160px] flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.08] bg-[#11181F] text-center">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FF536C]/10">
-                      <FileText
-                        size={19}
-                        className="text-[#FF536C]"
-                      />
-                    </div>
-
-                    <p className="mt-4 text-sm font-semibold text-white">
-                      {copy.document}
-                    </p>
-
-                    <p className="mt-2 max-w-md text-xs leading-5 text-slate-500">
-                      {copy.documentUnavailable}
-                    </p>
-                  </div>
                 </div>
               )}
             </div>
@@ -740,11 +829,12 @@ function ScanPageContent() {
 
           {/* RESULT */}
           {result && (
-            <div className="mt-10">
+            <div ref={resultContainerRef} id="scan-result-container" className="mt-10 scroll-mt-6">
               <ResultsPanel
                 result={result}
                 loading={loading}
                 error={null}
+                onReset={handleReset}
               />
             </div>
           )}

@@ -204,11 +204,11 @@ export default function SafetyTipsPage() {
   const [open, setOpen] = useState<number | null>(null);
   return (
     <AppShell>
-      <section className="px-5 py-10 sm:px-8 lg:px-10" dir={currentLanguage.rtl ? 'rtl' : 'ltr'}>
+      <section className="px-5 py-6 sm:px-8 sm:py-8 lg:px-10" dir={currentLanguage.rtl ? 'rtl' : 'ltr'}>
         <div className="mx-auto max-w-[980px]">
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl">{u[0]}</h1>
           <p className="mt-2 text-sm text-muted-foreground">{u[1]}</p>
-          <div className="mt-8 space-y-3">
+          <div className="mt-5 space-y-3">
             {cards.map((card, index) => { const isOpen=open===index; return (
               <article key={card.title} className="overflow-hidden rounded-xl border border-border bg-card">
                 <button type="button" aria-expanded={isOpen} onClick={()=>setOpen(isOpen?null:index)} className="flex min-h-16 w-full items-center gap-4 p-4 text-start transition hover:bg-muted/40 sm:p-5">

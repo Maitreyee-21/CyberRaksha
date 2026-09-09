@@ -19,6 +19,7 @@ class InputType(str, Enum):
     URL = "url"
     IMAGE = "image"
     QR = "qr"
+    DOCUMENT = "document"
 
 
 # ============================================================

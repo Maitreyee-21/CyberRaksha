@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Menu, Shield, LogOut } from 'lucide-react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { UnifiedInput } from '@/components/scan/UnifiedInput';
-import { ResultsPanel } from '@/components/analysis/ResultsPanel';
+import ResultsPanel from '@/components/analysis/ResultsPanel';
 import { runImageScan, runTextScan, runUrlScan } from '@/lib/api';
 import { loadScanHistory, saveScanHistoryItem, deleteScanHistoryItem, clearAllScanHistory } from '@/lib/history';
 import type { ScanResult, ScanHistoryItem } from '@/lib/types';
@@ -25,6 +25,7 @@ export function ScanApp({ onLogout, userName }: ScanAppProps = {}) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
 
   const mainScrollRef = React.useRef<HTMLDivElement>(null);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   // Load history on mount
   React.useEffect(() => {
@@ -38,12 +39,37 @@ export function ScanApp({ onLogout, userName }: ScanAppProps = {}) {
     }
   }, [result, loading]);
 
+  const handleNewScan = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+    setResult(null);
+    setCurrentScanId(null);
+    setError(null);
+    setMobileSidebarOpen(false);
+    mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  React.useEffect(() => {
+    const onNewScanEvent = () => handleNewScan();
+    window.addEventListener('cyberraksha-new-scan', onNewScanEvent);
+    return () => window.removeEventListener('cyberraksha-new-scan', onNewScanEvent);
+  }, []);
+
   const handleSubmit = async (args: {
     type: 'text' | 'image' | 'url' | 'qr';
     text?: string;
     url?: string;
     file?: File;
   }) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -66,27 +92,30 @@ export function ScanApp({ onLogout, userName }: ScanAppProps = {}) {
         throw new Error('No analysable content provided.');
       }
 
+      if (controller.signal.aborted) {
+        return;
+      }
+
       setResult(res);
       const savedItem = saveScanHistoryItem(args.type, previewText, res);
       setHistory(loadScanHistory());
       setCurrentScanId(savedItem.id);
     } catch (err: any) {
+      if (controller.signal.aborted) {
+        return;
+      }
       setError(err?.message || 'Unknown error occurred during threat scan');
     } finally {
-      setLoading(false);
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+        setLoading(false);
+      }
     }
   };
 
   const handleSelectHistoryItem = (item: ScanHistoryItem) => {
     setResult(item.result);
     setCurrentScanId(item.id);
-    setError(null);
-    setMobileSidebarOpen(false);
-  };
-
-  const handleNewScan = () => {
-    setResult(null);
-    setCurrentScanId(null);
     setError(null);
     setMobileSidebarOpen(false);
   };
@@ -154,7 +183,16 @@ export function ScanApp({ onLogout, userName }: ScanAppProps = {}) {
             </div>
 
             <span className="hidden lg:inline font-mono text-[11px] text-zinc-400">
-              Helpline: <b className="text-zinc-200">1930</b>
+              Helpline:{' '}
+              <a
+                href="https://cybercrime.gov.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition"
+                title="National Cybercrime Reporting Portal (1930)"
+              >
+                1930
+              </a>
             </span>
 
             {onLogout && (
@@ -175,7 +213,7 @@ export function ScanApp({ onLogout, userName }: ScanAppProps = {}) {
           ref={mainScrollRef}
           className="flex-1 overflow-y-auto overscroll-y-contain custom-scrollbar px-4 py-6 md:px-8 md:py-8 scroll-smooth"
         >
-          <ResultsPanel result={result} loading={loading} error={error} />
+          <ResultsPanel result={result} loading={loading} error={error} onReset={handleNewScan} />
         </main>
 
         {/* Floating Unified Input Bar at Bottom */}
