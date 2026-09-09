@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -48,6 +48,9 @@ import {
 } from '@/components/providers/LanguageProvider';
 
 import ResultsPanel from '@/components/analysis/ResultsPanel';
+import { LandingPage } from '@/components/home/LandingPage';
+import { LoginScreen } from '@/components/auth/LoginScreen';
+import { RegisterScreen } from '@/components/auth/RegisterScreen';
 
 type InputType =
   | 'text'
@@ -56,18 +59,28 @@ type InputType =
   | 'image'
   | 'document';
 
+type ViewType = 'home' | 'login' | 'register' | 'scan';
+
+interface Identity {
+  name: string;
+  guest: boolean;
+}
+
 export default function HomePage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const fileInputRef =
-    useRef<HTMLInputElement | null>(null);
+  // VIEW & AUTH STATE
+  const [view, setView] = useState<ViewType>('home');
+  const [identity, setIdentity] = useState<Identity | null>(null);
 
   const {
     language,
     setLanguage,
     currentLanguage,
   } = useLanguage();
-    const currentTranslation =
+
+  const currentTranslation =
     translations[language] ?? translations.en;
 
   const homeText =
@@ -79,7 +92,8 @@ export default function HomePage() {
   const brandText =
     currentTranslation.brand;
 
-const [selectedType, setSelectedType] =
+  // SCAN STATE
+  const [selectedType, setSelectedType] =
     useState<InputType>('text');
 
   const [text, setText] =
@@ -105,9 +119,51 @@ const [selectedType, setSelectedType] =
     setLanguageOpen,
   ] = useState(false);
 
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setIdentity({
+            name: data.user?.fullName || 'User',
+            guest: false,
+          });
+          setView('scan');
+        }
+      } catch (err) {
+        // Not authenticated, stay on home
+        setView('home');
+      }
+    };
+    checkAuth();
+  }, []);
+
   /* =====================================================
-     LANGUAGE
+     HANDLERS
   ===================================================== */
+
+  const handleAuthenticated = (newIdentity: Identity) => {
+    setIdentity(newIdentity);
+    setView('scan');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {
+      // Silent error
+    }
+    setIdentity(null);
+    setView('home');
+  };
 
   const changeLanguage = (
     nextLanguage: LanguageCode
@@ -343,6 +399,7 @@ const [selectedType, setSelectedType] =
     } finally {
       setLoading(false);
     }
+  };
 
   /* =====================================================
      CHECK NOW
@@ -356,7 +413,62 @@ const [selectedType, setSelectedType] =
   };
 
   /* =====================================================
-     UI
+     VIEW: HOME/LANDING
+  ===================================================== */
+
+  if (view === 'home') {
+    return (
+      <LandingPage
+        onGoToLogin={() => setView('login')}
+        onRegistered={() => setView('login')}
+      />
+    );
+  }
+
+  /* =====================================================
+     VIEW: LOGIN
+  ===================================================== */
+
+  if (view === 'login') {
+    return (
+      <LoginScreen
+        onAuthenticated={handleAuthenticated}
+        onGoToHome={() => setView('home')}
+        onGoToRegister={() => setView('register')}
+      />
+    );
+  }
+
+  /* =====================================================
+     VIEW: REGISTER
+  ===================================================== */
+
+  if (view === 'register') {
+    return (
+      <RegisterScreen
+        onGoToLogin={() => setView('login')}
+        onGoToHome={() => setView('home')}
+        onRegistered={() => setView('login')}
+      />
+    );
+  }
+
+  /* =====================================================
+     VIEW: SCAN (PROTECTED)
+  ===================================================== */
+
+  if (!identity) {
+    return (
+      <LoginScreen
+        onAuthenticated={handleAuthenticated}
+        onGoToHome={() => setView('home')}
+        onGoToRegister={() => setView('register')}
+      />
+    );
+  }
+
+  /* =====================================================
+     SCAN PAGE UI
   ===================================================== */
 
   return (
@@ -370,44 +482,8 @@ const [selectedType, setSelectedType] =
         ref={fileInputRef}
         type="file"
         className="hidden"
-        onChange={
-          handleFileChange
-        }
+        onChange={handleFileChange}
       />
-    );
-  }
-
-  if (view === 'login') {
-    return (
-      <LoginScreen
-        onAuthenticated={handleAuthenticated}
-        onGoToHome={() => setView('home')}
-        onGoToRegister={() => setView('register')}
-      />
-    );
-  }
-
-  if (view === 'register') {
-    return (
-      <RegisterScreen
-        onGoToLogin={() => setView('login')}
-        onGoToHome={() => setView('home')}
-        onRegistered={() => setView('login')}
-      />
-    );
-  }
-
-  // view === 'scan' — protected; identity checked
-  if (!identity) {
-    // If not authenticated, redirect to login
-    return (
-      <LoginScreen
-        onAuthenticated={handleAuthenticated}
-        onGoToHome={() => setView('home')}
-        onGoToRegister={() => setView('register')}
-      />
-    );
-  }
 
       {/* =========================
           MOBILE MENU BUTTON
@@ -1108,12 +1184,13 @@ const [selectedType, setSelectedType] =
           </button>
 
           {/* =========================
-              PROFILE
+              LOGOUT BUTTON
           ========================= */}
 
           <button
             type="button"
-            aria-label="Profile"
+            aria-label="Logout"
+            onClick={handleLogout}
             className="
               flex h-10 w-10
               items-center
@@ -1128,8 +1205,10 @@ const [selectedType, setSelectedType] =
 
               transition
 
-              hover:bg-[#202A33]
+              hover:bg-red-500/20
+              hover:text-red-400
             "
+            title="Logout"
           >
             <UserCircle
               size={21}
