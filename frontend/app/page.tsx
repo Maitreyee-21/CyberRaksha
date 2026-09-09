@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -71,6 +71,7 @@ export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // VIEW & AUTH STATE
+  // Always start with 'home' view - landing page first
   const [view, setView] = useState<ViewType>('home');
   const [identity, setIdentity] = useState<Identity | null>(null);
 
@@ -118,30 +119,6 @@ export default function HomePage() {
     languageOpen,
     setLanguageOpen,
   ] = useState(false);
-
-  // Check authentication on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch('/api/auth/me', {
-          method: 'GET',
-          credentials: 'include',
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setIdentity({
-            name: data.user?.fullName || 'User',
-            guest: false,
-          });
-          setView('scan');
-        }
-      } catch (err) {
-        // Not authenticated, stay on home
-        setView('home');
-      }
-    };
-    checkAuth();
-  }, []);
 
   /* =====================================================
      HANDLERS
