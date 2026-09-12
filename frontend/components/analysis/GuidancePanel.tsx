@@ -4,9 +4,7 @@ import * as React from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
-  ExternalLink,
   Info,
-  Phone,
   ShieldCheck,
   XCircle,
 } from 'lucide-react';
@@ -416,6 +414,12 @@ export function GuidancePanel({
     guidanceMap?.en ??
     { steps: [] };
 
+  const stepsList = (content.steps || []).filter(
+    (step) =>
+      !step.includes('1930') &&
+      !step.toLowerCase().includes('cybercrime.gov.in')
+  );
+
   return (
     <section className="rounded-3xl border border-[#ddd8ca] bg-white shadow-[0_15px_45px_rgba(48,43,30,.06)] overflow-hidden">
       <div className="p-5 md:p-6 border-b border-[#e8e3d8]">
@@ -489,7 +493,7 @@ export function GuidancePanel({
           </div>
 
           <div className="space-y-2">
-            {content.steps?.map((step, index) => (
+            {stepsList.map((step, index) => (
               <div
                 key={`${step}-${index}`}
                 className="flex items-start gap-3 rounded-xl border border-[#e2e7dd] bg-[#f7faf5] p-3"
@@ -505,7 +509,7 @@ export function GuidancePanel({
             ))}
           </div>
 
-          {(!content.steps || content.steps.length === 0) && (
+          {stepsList.length === 0 && (
             <div className="rounded-xl border border-[#e2e7dd] bg-[#f7faf5] p-3 text-xs text-[#5f695f]">
               {t.steps}
             </div>
@@ -541,54 +545,6 @@ export function GuidancePanel({
           </div>
         </div>
 
-        <div className="pt-1">
-          <div className="text-[10px] uppercase tracking-[.16em] font-black text-[#777c78] mb-2">
-            {t.emergency}
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-2">
-            <a
-              href="https://cybercrime.gov.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-xl border border-[#e0d7c7] bg-[#faf8f2] p-3 hover:border-[#c89422] transition"
-              title="Official National Cybercrime Reporting Portal (Helpline 1930)"
-            >
-              <div className="w-8 h-8 rounded-lg bg-[#fff0ed] text-[#b33d32] flex items-center justify-center">
-                <Phone size={15} />
-              </div>
-
-              <div>
-                <div className="text-[10px] text-[#777c78]">
-                  {t.call}
-                </div>
-
-                <div className="text-sm font-black text-[#283137]">
-                  1930
-                </div>
-              </div>
-            </a>
-
-            <a
-              href="https://cybercrime.gov.in"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between rounded-xl border border-[#e0d7c7] bg-[#faf8f2] p-3 hover:border-[#c89422] transition"
-            >
-              <div>
-                <div className="text-[10px] text-[#777c78]">
-                  {t.report}
-                </div>
-
-                <div className="text-sm font-black text-[#283137]">
-                  cybercrime.gov.in
-                </div>
-              </div>
-
-              <ExternalLink size={15} className="text-[#777c78]" />
-            </a>
-          </div>
-        </div>
       </div>
     </section>
   );

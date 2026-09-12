@@ -323,7 +323,7 @@ export function EmergencyAlert({
     security?.emergency_alert.safe_actions ?? [
       'Do not click the link or enter credentials.',
       'Verify the organization through an official channel.',
-      'Report suspected cyber fraud through 1930 when appropriate.',
+      'Report suspected cyber fraud through official channels.',
     ];
 
   return (
@@ -403,25 +403,7 @@ export function EmergencyAlert({
                   className="text-teal-400 shrink-0 mt-0.5"
                 />
 
-                <span>
-                  {typeof action === 'string' && action.includes('1930') ? (
-                    <>
-                      {action.split('1930')[0]}
-                      <a
-                        href="https://cybercrime.gov.in/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-bold text-cyan-400 hover:text-cyan-300 underline underline-offset-2"
-                        title="National Cybercrime Reporting Portal (1930)"
-                      >
-                        1930
-                      </a>
-                      {action.split('1930')[1]}
-                    </>
-                  ) : (
-                    action
-                  )}
-                </span>
+                <span>{action}</span>
               </div>
             ))}
           </div>
