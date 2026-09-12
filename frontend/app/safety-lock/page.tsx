@@ -61,6 +61,18 @@ export default function SafetyLockPage() {
     } catch {
       // Ignore invalid local browser data.
     }
+
+    const handleLockChanged = (e: Event) => {
+      const customEvent = e as CustomEvent<{ enabled?: boolean }>;
+      if (typeof customEvent.detail?.enabled === 'boolean') {
+        setEnabled(customEvent.detail.enabled);
+      }
+    };
+
+    window.addEventListener('cyberraksha-safety-lock-changed', handleLockChanged);
+    return () => {
+      window.removeEventListener('cyberraksha-safety-lock-changed', handleLockChanged);
+    };
   }, []);
 
   useEffect(() => {
@@ -68,6 +80,11 @@ export default function SafetyLockPage() {
       localStorage.setItem(
         'cyberraksha-safety-lock',
         String(enabled)
+      );
+      window.dispatchEvent(
+        new CustomEvent('cyberraksha-safety-lock-changed', {
+          detail: { enabled },
+        })
       );
     } catch {
       // Ignore storage errors.

@@ -14,6 +14,7 @@ import {
   Home,
   History,
   ShieldCheck,
+  ShieldAlert,
   Lightbulb,
   Flag,
   Settings,
@@ -100,21 +101,60 @@ export function Sidebar({
       loadScanHistory()
     );
 
-    try {
-      const savedLock =
-        window.localStorage.getItem(
-          'cyberraksha-safety-lock'
-        );
+    const updateFromStorage = () => {
+      try {
+        const savedLock =
+          window.localStorage.getItem(
+            'cyberraksha-safety-lock'
+          );
 
-      if (savedLock !== null) {
-        setSafetyLockEnabled(
-          savedLock === 'true'
-        );
+        if (savedLock !== null) {
+          setSafetyLockEnabled(
+            savedLock === 'true'
+          );
+        } else {
+          setSafetyLockEnabled(true);
+        }
+      } catch {
+        // Keep default
       }
-    } catch {
-      // Keep the default protected state if browser storage is unavailable.
-    }
+    };
+
+    updateFromStorage();
+
+    const handleLockChanged = (e: Event) => {
+      const customEvent = e as CustomEvent<{ enabled?: boolean }>;
+      if (typeof customEvent.detail?.enabled === 'boolean') {
+        setSafetyLockEnabled(customEvent.detail.enabled);
+      } else {
+        updateFromStorage();
+      }
+    };
+
+    window.addEventListener('cyberraksha-safety-lock-changed', handleLockChanged);
+    window.addEventListener('storage', updateFromStorage);
+
+    return () => {
+      window.removeEventListener('cyberraksha-safety-lock-changed', handleLockChanged);
+      window.removeEventListener('storage', updateFromStorage);
+    };
   }, [pathname]);
+
+  const handleToggleSafetyLock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = !safetyLockEnabled;
+    setSafetyLockEnabled(next);
+    try {
+      window.localStorage.setItem('cyberraksha-safety-lock', String(next));
+      window.dispatchEvent(
+        new CustomEvent('cyberraksha-safety-lock-changed', {
+          detail: { enabled: next },
+        })
+      );
+    } catch {
+      // ignore
+    }
+  };
 
   const navigate = (
     path: string
@@ -456,14 +496,16 @@ export function Sidebar({
             }
             title={
               collapsed
-                ? navigationText.safetyLock
+                ? (safetyLockEnabled ? 'Protection ON (Active)' : 'Protection OFF (Paused)')
                 : undefined
             }
             className={`
-              w-full rounded-xl
-              border border-[#00E6D0]/10
-              bg-[#00E6D0]/[0.04]
-
+              w-full rounded-xl transition-all duration-200
+              ${
+                safetyLockEnabled
+                  ? 'border border-[#00E6D0]/20 bg-[#00E6D0]/[0.05] hover:bg-[#00E6D0]/[0.08]'
+                  : 'border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.08]'
+              }
               ${
                 collapsed
                   ? 'flex h-10 items-center justify-center'
@@ -473,39 +515,65 @@ export function Sidebar({
           >
 
             {collapsed ? (
-              <ShieldCheck
-                size={21}
-                className="text-[#00E6D0]"
-              />
+              safetyLockEnabled ? (
+                <ShieldCheck
+                  size={21}
+                  className="text-[#00E6D0]"
+                />
+              ) : (
+                <ShieldAlert
+                  size={21}
+                  className="text-amber-400"
+                />
+              )
             ) : (
               <div className="flex items-center gap-3">
 
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#00E6D0]/10">
-                  <ShieldCheck
-                    size={18}
-                    className="text-[#00E6D0]"
-                  />
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
+                    safetyLockEnabled
+                      ? 'bg-[#00E6D0]/10 text-[#00E6D0]'
+                      : 'bg-amber-500/10 text-amber-400'
+                  }`}
+                >
+                  {safetyLockEnabled ? (
+                    <ShieldCheck
+                      size={18}
+                      className="text-[#00E6D0]"
+                    />
+                  ) : (
+                    <ShieldAlert
+                      size={18}
+                      className="text-amber-400"
+                    />
+                  )}
                 </div>
 
                 <div className="min-w-0 flex-1 text-left">
 
-                  <div className="text-xs font-bold">
-                    Protected
+                  <div
+                    className={`text-xs font-bold transition-colors ${
+                      safetyLockEnabled ? 'text-zinc-100' : 'text-amber-300'
+                    }`}
+                  >
+                    {safetyLockEnabled ? 'Protected (ON)' : 'Protection OFF'}
                   </div>
 
                   <div className="mt-0.5 text-[9px] text-slate-500">
                     {safetyLockEnabled
-                      ? "Protection Active"
-                      : 'Protection paused'}
+                      ? 'Protection Active'
+                      : 'Protection Paused'}
                   </div>
 
                 </div>
 
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[8px] font-bold ${
+                  onClick={handleToggleSafetyLock}
+                  title={safetyLockEnabled ? 'Click to pause protection' : 'Click to activate protection'}
+                  className={`cursor-pointer rounded-full px-2 py-0.5 text-[8px] font-bold transition-all hover:scale-105 active:scale-95 ${
                     safetyLockEnabled
-                      ? 'bg-[#00D394] text-black'
-                      : 'bg-slate-700 text-slate-300'
+                      ? 'bg-[#00D394] text-black shadow-[0_0_8px_rgba(0,211,148,0.4)]'
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                   }`}
                 >
                   {safetyLockEnabled ? 'ON' : 'OFF'}
