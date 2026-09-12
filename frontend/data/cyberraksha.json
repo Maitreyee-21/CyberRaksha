@@ -31,6 +31,62 @@
       "username": "aditya_1804",
       "passwordHash": "$2b$10$PXQklRDnzmEKWK6KGts0nOlJlHMsVyXnmAmnjkjEpBchu2e3qZarW",
       "createdAt": "2026-09-09T15:18:23.522Z"
+    },
+    {
+      "id": "usr_1789227538793_ha5h1ab",
+      "fullName": "Aditya Verma",
+      "email": "aditya_1789227535156@example.com",
+      "username": "aditya_5156",
+      "passwordHash": "$2b$10$QoWqU8kfYzLGHwPuhgPbGOuneuedR.98rG2gO1j/fE5lEp7hjJ7z.",
+      "createdAt": "2026-09-12T15:38:58.793Z"
+    },
+    {
+      "id": "usr_1789229053895_jt6ugmx",
+      "fullName": "Maitreyee Patel",
+      "email": "maitreyee_test_1789229053060@example.com",
+      "username": "maitreyee21",
+      "passwordHash": "$2b$10$c0Na.hcVouub/.YSoad8IesGt8BQyl8qwNm9PTZbeLIq79GlqczPi",
+      "createdAt": "2026-09-12T16:04:13.895Z"
+    },
+    {
+      "id": "usr_1789229814934_tdjrc93",
+      "fullName": "Maitreyee Patel",
+      "email": "maitreyee_1789229812613@example.com",
+      "username": "maitreyee-21",
+      "passwordHash": "$2b$10$MbbofQTucW8TfI9kz//8/OMUhVu.aiWq8ColhnFvK5EszMDoXdx2q",
+      "createdAt": "2026-09-12T16:16:54.934Z"
+    },
+    {
+      "id": "usr_1789229816966_p63h652",
+      "fullName": "John Doe",
+      "email": "johndoe_1789229816070@example.com",
+      "username": "john.doe",
+      "passwordHash": "$2b$10$MnBu2RU8.BxMfnJF65SN7eSCBJQ.b8nD8y6H9eTGnCjq6gKA.qyUa",
+      "createdAt": "2026-09-12T16:16:56.966Z"
+    },
+    {
+      "id": "usr_1789229817233_f0dtx5c",
+      "fullName": "Priya Sharma",
+      "email": "priya_1789229816977@example.com",
+      "username": "priya_1789229816977",
+      "passwordHash": "$2b$10$NnENErwFJOaKQzZadKW3be7UHwv4uTtRAo4RvjcZWfpCcbbFatue2",
+      "createdAt": "2026-09-12T16:16:57.233Z"
+    },
+    {
+      "id": "usr_1789229832765_dp6d19h",
+      "fullName": "Aditya Verma",
+      "email": "aditya_1789229832318@example.com",
+      "username": "aditya_2318",
+      "passwordHash": "$2b$10$je6AdPmOt5N70obvafhFTe/VZuKp2CVgZbzyzx0ViVVUEHu6bVk0G",
+      "createdAt": "2026-09-12T16:17:12.765Z"
+    },
+    {
+      "id": "usr_1789230247148_v0lcl2h",
+      "fullName": "User",
+      "email": "user11@gmail.com",
+      "username": "user_11",
+      "passwordHash": "$2b$10$AU/2cYwjnkz30XW0lxeaD.fJVni6iLxN4QagLM4O4beZTcv0ZIyXS",
+      "createdAt": "2026-09-12T16:24:07.148Z"
     }
   ]
 }

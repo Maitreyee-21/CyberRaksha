@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 interface RegisterScreenProps {
   onGoToLogin: () => void;
   onGoToHome?: () => void;
-  onRegistered?: () => void;
+  onRegistered?: (creds?: { identifier: string; password?: string }) => void;
 }
 
 export function RegisterScreen({ onGoToLogin, onGoToHome, onRegistered }: RegisterScreenProps) {
@@ -30,7 +30,10 @@ export function RegisterScreen({ onGoToLogin, onGoToHome, onRegistered }: Regist
     if (!success) return;
     if (countdown <= 0) {
       if (onRegistered) {
-        onRegistered();
+        onRegistered({
+          identifier: email.trim().toLowerCase() || username.trim().toLowerCase(),
+          password,
+        });
       } else {
         onGoToLogin();
       }
@@ -38,13 +41,16 @@ export function RegisterScreen({ onGoToLogin, onGoToHome, onRegistered }: Regist
     }
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
-  }, [success, countdown, onRegistered, onGoToLogin]);
+  }, [success, countdown, onRegistered, onGoToLogin, email, username, password]);
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
 
-    if (!fullName.trim()) errs.fullName = 'Full name is required.';
-    else if (fullName.trim().length < 2) errs.fullName = 'Enter at least 2 characters.';
+    if (!fullName.trim()) {
+      errs.fullName = 'Full name is required.';
+    } else if (fullName.trim().length < 2) {
+      errs.fullName = 'Enter at least 2 characters.';
+    }
 
     if (!email.trim()) {
       errs.email = 'Email address is required.';
@@ -52,12 +58,11 @@ export function RegisterScreen({ onGoToLogin, onGoToHome, onRegistered }: Regist
       errs.email = 'Enter a valid email address.';
     }
 
-    if (!username.trim()) {
-      errs.username = 'Username is required.';
-    } else if (username.trim().length < 3 || username.trim().length > 20) {
-      errs.username = 'Username must be 3–20 characters.';
-    } else if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) {
-      errs.username = 'Only letters, numbers, and underscores are allowed.';
+    const effectiveUsername = (username.trim() || email.trim().split('@')[0] || '').replace(/\s+/g, '_');
+    if (username.trim() && !/^[a-zA-Z0-9_.\-@+]+$/.test(effectiveUsername)) {
+      errs.username = 'Only letters, numbers, hyphens, dots, and underscores are allowed.';
+    } else if (effectiveUsername && effectiveUsername.length < 2) {
+      errs.username = 'Username must be at least 2 characters.';
     }
 
     if (!password) {
@@ -82,6 +87,9 @@ export function RegisterScreen({ onGoToLogin, onGoToHome, onRegistered }: Regist
 
     if (!validate()) return;
 
+    const emailClean = email.trim().toLowerCase();
+    const effectiveUsername = (username.trim() || emailClean.split('@')[0]).replace(/\s+/g, '_').toLowerCase();
+
     setLoading(true);
     try {
       const res = await fetch('/api/auth/register', {
@@ -89,8 +97,8 @@ export function RegisterScreen({ onGoToLogin, onGoToHome, onRegistered }: Regist
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: fullName.trim(),
-          email: email.trim().toLowerCase(),
-          username: username.trim().toLowerCase(),
+          email: emailClean,
+          username: effectiveUsername,
           password,
           confirmPassword,
         }),
@@ -111,6 +119,20 @@ export function RegisterScreen({ onGoToLogin, onGoToHome, onRegistered }: Regist
           setGeneralError(data.error || 'Failed to complete registration.');
         }
         return;
+      }
+
+      // Sync user session to localStorage
+      if (typeof window !== 'undefined' && data.user) {
+        try {
+          localStorage.setItem('cyberraksha-user', JSON.stringify(data.user));
+          localStorage.setItem('cyberraksha-profile', JSON.stringify({
+            name: data.user.fullName,
+            email: data.user.email,
+          }));
+          window.dispatchEvent(new CustomEvent('cyberraksha-profile-updated'));
+        } catch {
+          // ignore
+        }
       }
 
       setSuccess(true);
@@ -197,8 +219,14 @@ export function RegisterScreen({ onGoToLogin, onGoToHome, onRegistered }: Regist
               </p>
               <Button
                 onClick={() => {
-                  if (onRegistered) onRegistered();
-                  else onGoToLogin();
+                  if (onRegistered) {
+                    onRegistered({
+                      identifier: email.trim().toLowerCase() || username.trim().toLowerCase(),
+                      password,
+                    });
+                  } else {
+                    onGoToLogin();
+                  }
                 }}
                 size="sm"
                 className="mt-5 w-full bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-semibold gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)]"

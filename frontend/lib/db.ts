@@ -14,22 +14,43 @@ interface DatabaseSchema {
   users: UserRecord[];
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DATA_DIR, 'cyberraksha.json');
-
-function ensureDatabase(): DatabaseSchema {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+function getDatabaseFilePath(): string {
+  // 1. Check frontend/data/cyberraksha.json if process.cwd() is project root
+  const rootFrontendFile = path.join(process.cwd(), 'frontend', 'data', 'cyberraksha.json');
+  if (fs.existsSync(rootFrontendFile)) {
+    return rootFrontendFile;
   }
 
-  if (!fs.existsSync(DB_FILE)) {
+  // 2. Check data/cyberraksha.json if process.cwd() is frontend
+  const cwdFile = path.join(process.cwd(), 'data', 'cyberraksha.json');
+  if (fs.existsSync(cwdFile)) {
+    return cwdFile;
+  }
+
+  // 3. Fallback: if 'frontend' directory exists in cwd, use frontend/data/cyberraksha.json
+  if (fs.existsSync(path.join(process.cwd(), 'frontend'))) {
+    return rootFrontendFile;
+  }
+
+  return cwdFile;
+}
+
+function ensureDatabase(): DatabaseSchema {
+  const dbFile = getDatabaseFilePath();
+  const dataDir = path.dirname(dbFile);
+
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
+  if (!fs.existsSync(dbFile)) {
     const initialData: DatabaseSchema = { users: [] };
-    fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2), 'utf-8');
+    fs.writeFileSync(dbFile, JSON.stringify(initialData, null, 2), 'utf-8');
     return initialData;
   }
 
   try {
-    const raw = fs.readFileSync(DB_FILE, 'utf-8');
+    const raw = fs.readFileSync(dbFile, 'utf-8');
     const parsed = JSON.parse(raw);
     if (!parsed.users || !Array.isArray(parsed.users)) {
       parsed.users = [];
@@ -37,16 +58,19 @@ function ensureDatabase(): DatabaseSchema {
     return parsed;
   } catch {
     const initialData: DatabaseSchema = { users: [] };
-    fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2), 'utf-8');
+    fs.writeFileSync(dbFile, JSON.stringify(initialData, null, 2), 'utf-8');
     return initialData;
   }
 }
 
 function writeDatabase(data: DatabaseSchema): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  const dbFile = getDatabaseFilePath();
+  const dataDir = path.dirname(dbFile);
+
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
   }
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  fs.writeFileSync(dbFile, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 export async function findUserByEmail(email: string): Promise<UserRecord | null> {
@@ -61,16 +85,20 @@ export async function findUserByUsername(username: string): Promise<UserRecord |
   return db.users.find((u) => u.username.toLowerCase() === normalized) || null;
 }
 
-export async function findUserByIdentifier(identifier: string): Promise<UserRecord | null> {
+export async function findUsersByIdentifier(identifier: string): Promise<UserRecord[]> {
   const db = ensureDatabase();
   const normalized = identifier.trim().toLowerCase();
-  return (
-    db.users.find(
-      (u) =>
-        u.email.toLowerCase() === normalized ||
-        u.username.toLowerCase() === normalized
-    ) || null
+  return db.users.filter(
+    (u) =>
+      u.email.toLowerCase() === normalized ||
+      u.username.toLowerCase() === normalized ||
+      u.fullName.toLowerCase() === normalized
   );
+}
+
+export async function findUserByIdentifier(identifier: string): Promise<UserRecord | null> {
+  const matching = await findUsersByIdentifier(identifier);
+  return matching.length > 0 ? matching[0] : null;
 }
 
 export async function findUserById(id: string): Promise<UserRecord | null> {

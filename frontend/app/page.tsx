@@ -80,6 +80,28 @@ export default function HomePage() {
   // Always start with 'home' view - landing page first
   const [view, setView] = useState<ViewType>('home');
   const [identity, setIdentity] = useState<Identity | null>(null);
+  const [registeredCreds, setRegisteredCreds] = useState<{
+    identifier?: string;
+    password?: string;
+    successMessage?: string;
+  } | null>(null);
+
+  // Restore authenticated session on mount if available
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.authenticated && data?.user) {
+          setIdentity({
+            name: data.user.fullName || data.user.username || data.user.email,
+            guest: false,
+          });
+        }
+      })
+      .catch(() => {
+        // Not authenticated
+      });
+  }, []);
 
   const {
     language,
@@ -185,9 +207,30 @@ export default function HomePage() {
     } catch {
       // Silent error
     }
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('cyberraksha-user');
+        localStorage.removeItem('cyberraksha-profile');
+        window.dispatchEvent(new CustomEvent('cyberraksha-profile-updated'));
+      } catch {
+        // ignore
+      }
+    }
     setProfileMenuOpen(false);
     setIdentity(null);
+    setRegisteredCreds(null);
     setView('home');
+  };
+
+  const handleRegistrationComplete = (creds?: { identifier?: string; password?: string }) => {
+    if (creds?.identifier) {
+      setRegisteredCreds({
+        identifier: creds.identifier,
+        password: creds.password,
+        successMessage: 'Account registered successfully! Please log in with your credentials.',
+      });
+    }
+    setView('login');
   };
 
   const changeLanguage = (
@@ -451,8 +494,11 @@ export default function HomePage() {
   if (view === 'home') {
     return (
       <LandingPage
-        onGoToLogin={() => setView('login')}
-        onRegistered={() => setView('login')}
+        onGoToLogin={() => {
+          setRegisteredCreds(null);
+          setView('login');
+        }}
+        onRegistered={handleRegistrationComplete}
       />
     );
   }
@@ -466,7 +512,13 @@ export default function HomePage() {
       <LoginScreen
         onAuthenticated={handleAuthenticated}
         onGoToHome={() => setView('home')}
-        onGoToRegister={() => setView('register')}
+        onGoToRegister={() => {
+          setRegisteredCreds(null);
+          setView('register');
+        }}
+        initialIdentifier={registeredCreds?.identifier}
+        initialPassword={registeredCreds?.password}
+        successMessage={registeredCreds?.successMessage}
       />
     );
   }
@@ -478,9 +530,12 @@ export default function HomePage() {
   if (view === 'register') {
     return (
       <RegisterScreen
-        onGoToLogin={() => setView('login')}
+        onGoToLogin={() => {
+          setRegisteredCreds(null);
+          setView('login');
+        }}
         onGoToHome={() => setView('home')}
-        onRegistered={() => setView('login')}
+        onRegistered={handleRegistrationComplete}
       />
     );
   }
@@ -494,7 +549,13 @@ export default function HomePage() {
       <LoginScreen
         onAuthenticated={handleAuthenticated}
         onGoToHome={() => setView('home')}
-        onGoToRegister={() => setView('register')}
+        onGoToRegister={() => {
+          setRegisteredCreds(null);
+          setView('register');
+        }}
+        initialIdentifier={registeredCreds?.identifier}
+        initialPassword={registeredCreds?.password}
+        successMessage={registeredCreds?.successMessage}
       />
     );
   }

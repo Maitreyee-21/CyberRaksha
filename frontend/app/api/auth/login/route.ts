@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByIdentifier } from '@/lib/db';
+import { findUsersByIdentifier, findUserByIdentifier } from '@/lib/db';
 import { verifyPassword, signAuthToken, AUTH_COOKIE_NAME } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
@@ -21,24 +21,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Lookup user by email or username
-    const user = await findUserByIdentifier(identifier.trim());
-    if (!user) {
-      // Generic error message for security
+    // Lookup users by email, username, or full name
+    const matchingUsers = await findUsersByIdentifier(identifier.trim());
+    if (!matchingUsers || matchingUsers.length === 0) {
       return NextResponse.json(
         { ok: false, error: 'Invalid username/email or password.' },
         { status: 401 }
       );
     }
 
-    // Verify hashed password using bcrypt
-    const isPasswordValid = await verifyPassword(password, user.passwordHash);
-    if (!isPasswordValid) {
+    // Verify hashed password using bcrypt against matched user(s)
+    let authenticatedUser = null;
+    for (const u of matchingUsers) {
+      const isMatch = await verifyPassword(password, u.passwordHash);
+      if (isMatch) {
+        authenticatedUser = u;
+        break;
+      }
+    }
+
+    if (!authenticatedUser) {
       return NextResponse.json(
         { ok: false, error: 'Invalid username/email or password.' },
         { status: 401 }
       );
     }
+
+    const user = authenticatedUser;
 
     // Generate JWT token
     const token = signAuthToken(user);

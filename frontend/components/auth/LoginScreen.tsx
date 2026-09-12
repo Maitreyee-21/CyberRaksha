@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Shield, Lock, ArrowRight, AtSign, Eye, EyeOff, ArrowLeft, KeyRound } from 'lucide-react';
+import { Shield, Lock, ArrowRight, AtSign, Eye, EyeOff, ArrowLeft, KeyRound, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -9,21 +9,38 @@ interface LoginScreenProps {
   onAuthenticated: (identity: { name: string; guest: boolean }) => void;
   onGoToHome?: () => void;
   onGoToRegister?: () => void;
+  initialIdentifier?: string;
+  initialPassword?: string;
+  successMessage?: string | null;
 }
 
-export function LoginScreen({ onAuthenticated, onGoToHome, onGoToRegister }: LoginScreenProps) {
-  const [identifier, setIdentifier] = React.useState('');
-  const [password, setPassword] = React.useState('');
+export function LoginScreen({
+  onAuthenticated,
+  onGoToHome,
+  onGoToRegister,
+  initialIdentifier = '',
+  initialPassword = '',
+  successMessage: initialSuccessMessage = null,
+}: LoginScreenProps) {
+  const [identifier, setIdentifier] = React.useState(initialIdentifier);
+  const [password, setPassword] = React.useState(initialPassword);
   const [showPassword, setShowPassword] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = React.useState<string | null>(initialSuccessMessage);
   const [loading, setLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (initialIdentifier) setIdentifier(initialIdentifier);
+    if (initialPassword) setPassword(initialPassword);
+    if (initialSuccessMessage) setInfoMessage(initialSuccessMessage);
+  }, [initialIdentifier, initialPassword, initialSuccessMessage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!identifier.trim()) {
-      setError('Please enter your email or username.');
+      setError('Please enter your email, username, or full name.');
       return;
     }
     if (!password) {
@@ -47,6 +64,20 @@ export function LoginScreen({ onAuthenticated, onGoToHome, onGoToRegister }: Log
       if (!res.ok) {
         setError(data.error || 'Invalid username/email or password.');
         return;
+      }
+
+      // Persist user session to localStorage for client components (e.g. AppShell)
+      if (typeof window !== 'undefined' && data.user) {
+        try {
+          localStorage.setItem('cyberraksha-user', JSON.stringify(data.user));
+          localStorage.setItem('cyberraksha-profile', JSON.stringify({
+            name: data.user.fullName,
+            email: data.user.email,
+          }));
+          window.dispatchEvent(new CustomEvent('cyberraksha-profile-updated'));
+        } catch {
+          // ignore
+        }
       }
 
       onAuthenticated({
@@ -171,6 +202,13 @@ export function LoginScreen({ onAuthenticated, onGoToHome, onGoToRegister }: Log
                 </button>
               </div>
             </div>
+
+            {infoMessage && (
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-3 text-xs text-cyan-300 text-left flex items-center gap-2 animate-in fade-in duration-200">
+                <CheckCircle2 size={16} className="text-cyan-400 shrink-0" />
+                <span>{infoMessage}</span>
+              </div>
+            )}
 
             {error && (
               <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-400 text-left animate-in fade-in duration-200">
