@@ -76,6 +76,8 @@ export interface ScanResult {
   risk_level: RiskLevel;
   risk_score: number;
   scam_category: string;
+  threat_type?: string;
+  threat_variety?: string;
   red_flags: string[];
   scam_dna: ScamDNA;
   summary: string;

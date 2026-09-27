@@ -330,6 +330,9 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
       // Sync user session to localStorage
       if (typeof window !== 'undefined' && data.user) {
         try {
+          if (data.token) {
+            localStorage.setItem('cyberraksha-token', data.token);
+          }
           localStorage.setItem('cyberraksha-user', JSON.stringify(data.user));
           localStorage.setItem('cyberraksha-profile', JSON.stringify({
             name: data.user.fullName,
@@ -377,17 +380,21 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
         </a>
 
         {/* Navigation links */}
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-cyan-400 transition-colors">
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white">
+          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-white hover:text-cyan-400 transition-colors">
             Home
           </button>
-          <button onClick={() => scrollToSection('features')} className="hover:text-cyan-400 transition-colors">
+          <button onClick={() => scrollToSection('features')} className="text-white hover:text-cyan-400 transition-colors">
             Features
           </button>
-          <button onClick={() => scrollToSection('how-it-works')} className="hover:text-cyan-400 transition-colors">
+          <button onClick={() => scrollToSection('how-it-works')} className="text-white hover:text-cyan-400 transition-colors">
             How It Works
           </button>
-          <button onClick={() => scrollToSection('about')} className="hover:text-cyan-400 transition-colors">
+          <button onClick={() => scrollToSection('threat-intelligence')} className="text-white hover:text-cyan-400 transition-colors flex items-center gap-1.5 group">
+            <Radio size={13} className="text-white group-hover:text-cyan-400 transition-colors" />
+            Threat Intelligence
+          </button>
+          <button onClick={() => scrollToSection('about')} className="text-white hover:text-cyan-400 transition-colors">
             About
           </button>
         </div>
@@ -789,8 +796,8 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
       </section>
 
       {/* ═══════════════════════════════ 5. LATEST ARTICLES & THREAT INTELLIGENCE ═══════════════════════════════ */}
-      <section id="articles" className="relative z-10 border-t border-white/10 bg-[#080d12] py-16 lg:py-24 px-6 sm:px-12">
-        <div className="mx-auto max-w-7xl">
+      <section id="threat-intelligence" data-section="articles" className="relative z-10 border-t border-white/10 bg-[#080d12] py-16 lg:py-24 px-6 sm:px-12 scroll-mt-14">
+        <div id="articles" className="mx-auto max-w-7xl">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div>

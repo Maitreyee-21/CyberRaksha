@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
         ok: true,
         message: `Welcome back, ${user.fullName}!`,
         user: safeUser,
+        token,
       },
       { status: 200 }
     );

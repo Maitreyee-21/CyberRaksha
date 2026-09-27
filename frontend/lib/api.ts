@@ -70,11 +70,13 @@ export async function runImageScan(
   mode: 'image' | 'qr',
   language: Language = 'en'
 ): Promise<ScanResult> {
-  if (!file) {
-    throw new Error(mode === 'qr' ? 'Please choose a QR code image to scan.' : 'Please choose an image or screenshot to scan.');
+  if (!file || file.size === 0) {
+    throw new Error('The attached image is invalid / Invalid QR code');
   }
-  if (file.size === 0) {
-    throw new Error('The selected image is empty (0 bytes). Please upload a valid image file.');
+
+  // Validate that the file is an image
+  if (file.type && !file.type.startsWith('image/')) {
+    throw new Error('The attached image is invalid / Invalid QR code');
   }
 
   const fd = new FormData();
@@ -89,10 +91,25 @@ export async function runImageScan(
   });
 
   if (!resp.ok) {
-    throw new Error(await extractErrorMessage(resp));
+    const rawMsg = await extractErrorMessage(resp);
+    if (
+      rawMsg.includes('invalid') ||
+      rawMsg.includes('QR') ||
+      rawMsg.includes('image') ||
+      rawMsg.includes('decode') ||
+      resp.status === 400
+    ) {
+      throw new Error('The attached image is invalid / Invalid QR code');
+    }
+    throw new Error(rawMsg);
   }
 
-  return (await resp.json()) as ScanResult;
+  const data = (await resp.json()) as ScanResult;
+  if (data.scam_category && data.scam_category.toLowerCase().includes('invalid')) {
+    throw new Error('The attached image is invalid / Invalid QR code');
+  }
+
+  return data;
 }
 
 export async function runDocumentScan(

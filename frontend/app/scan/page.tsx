@@ -331,18 +331,23 @@ function ScanPageContent() {
 
     if (
       (selectedType === 'qr' ||
-        selectedType === 'image' ||
-        selectedType === 'document') &&
+        selectedType === 'image') &&
+      !selectedFile
+    ) {
+      setError('The attached image is invalid / Invalid QR code');
+      return;
+    }
+
+    if (
+      selectedType === 'document' &&
       !selectedFile
     ) {
       setError(
-        selectedType === 'document'
-          ? (language === 'hi'
-              ? 'कृपया जाँच के लिए एक दस्तावेज़ चुनें।'
-              : language === 'mr'
-                ? 'कृपया तपासण्यासाठी एक दस्तऐवज निवडा.'
-                : 'Please choose a document to check.')
-          : copy.imageRequired
+        language === 'hi'
+          ? 'कृपया जाँच के लिए एक दस्तावेज़ चुनें।'
+          : language === 'mr'
+            ? 'कृपया तपासण्यासाठी एक दस्तऐवज निवडा.'
+            : 'Please choose a document to check.'
       );
       return;
     }
@@ -403,7 +408,15 @@ function ScanPageContent() {
           ? err.message
           : '';
 
-      setError(message || copy.scanError);
+      const finalError =
+        selectedType === 'qr' ||
+        selectedType === 'image' ||
+        message.toLowerCase().includes('image') ||
+        message.toLowerCase().includes('qr')
+          ? 'The attached image is invalid / Invalid QR code'
+          : message || copy.scanError;
+
+      setError(finalError);
     } finally {
       if (abortControllerRef.current === controller) {
         abortControllerRef.current = null;
@@ -804,31 +817,38 @@ function ScanPageContent() {
             </div>
           </div>
 
-          {/* ERROR */}
+          {/* STANDARDIZED ERROR NOTIFICATION (PURE RED #ff0000) */}
           {error && (
-            <div className="mt-6 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/[0.07] p-4 text-sm text-red-300">
-              <div className="mt-0.5 shrink-0">
-                <ShieldCheck size={15} />
+            <div
+              id="scanner-inline-error"
+              className="mt-6 flex items-start gap-3 rounded-xl border border-[#ff0000]/40 bg-[#ff0000]/10 p-4 text-sm font-semibold"
+              style={{ color: '#ff0000' }}
+            >
+              <div className="mt-0.5 shrink-0" style={{ color: '#ff0000' }}>
+                <ShieldCheck size={18} style={{ color: '#ff0000' }} />
               </div>
 
               <div className="flex-1">
-                <p className="font-semibold">
-                  {language === 'hi'
-                    ? 'जाँच शुरू नहीं हो सकी'
-                    : language === 'mr'
-                      ? 'तपासणी सुरू होऊ शकली नाही'
-                      : 'Check could not start'}
+                <p className="font-bold text-sm tracking-wide" style={{ color: '#ff0000' }}>
+                  {selectedType === 'qr' || selectedType === 'image' || error.toLowerCase().includes('image') || error.toLowerCase().includes('qr')
+                    ? 'The attached image is invalid / Invalid QR code'
+                    : error}
                 </p>
-
-                <p className="mt-1 text-xs leading-5 text-red-300/70">
-                  {error}
-                </p>
+                {(selectedType === 'qr' || selectedType === 'image' || error.toLowerCase().includes('image') || error.toLowerCase().includes('qr')) && (
+                  <p className="mt-1 text-xs opacity-90" style={{ color: '#ff0000' }}>
+                    {language === 'hi'
+                      ? 'संलग्न छवि अमान्य है / अमान्य क्यूआर कोड'
+                      : language === 'mr'
+                        ? 'जोडलेली प्रतिमा अवैध आहे / अवैध क्यूआर कोड'
+                        : 'Please upload a clear, uncorrupted image or valid QR code.'}
+                  </p>
+                )}
               </div>
             </div>
           )}
 
-          {/* RESULT */}
-          {result && (
+          {/* RESULT INLINE */}
+          {(result || loading) && (
             <div ref={resultContainerRef} id="scan-result-container" className="mt-10 scroll-mt-6">
               <ResultsPanel
                 result={result}

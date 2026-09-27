@@ -95,6 +95,14 @@
       "username": "user_21",
       "passwordHash": "$2b$10$B/OjUHB8VcmpKyS46L0D6eSyqEn30K5iZ9ZZOqHM8UbyisUNKwbrm",
       "createdAt": "2026-09-27T09:23:07.403Z"
+    },
+    {
+      "id": "usr_1790510377638_ej6dszn",
+      "fullName": "Aditya Verma",
+      "email": "aditya_1790510377307@example.com",
+      "username": "aditya_7307",
+      "passwordHash": "$2b$10$3s0wDCc0VGf2YmqnEMJtnei2bS6P7ltSU/ti/X0aaJZyiU.Z5zYem",
+      "createdAt": "2026-09-27T11:59:37.638Z"
     }
   ]
 }

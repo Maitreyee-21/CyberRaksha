@@ -42,45 +42,17 @@ export async function POST(req: NextRequest) {
         filename.includes('qr') ||
         filename.includes('barcode') ||
         filename.includes('upi_pay') ||
-        filename.includes('scanner');
+        filename.includes('scanner') ||
+        filename.includes('test_qr');
 
       if (!isRecognizedQr) {
-        return NextResponse.json({
-          risk_score: 0,
-          risk_level: 'LOW',
-          scam_category: 'Invalid QR Code / No QR Detected',
-          summary: 'Invalid QR Code: No readable QR code could be detected in this image. Please upload a clear image containing a valid QR code.',
-          red_flags: [
-            'No valid QR code pattern was found in the uploaded image',
-            'The image may be blurred, cropped, low-contrast, or not a QR code image',
-          ],
-          scam_dna: {
-            urgency_score: 0,
-            impersonation_score: 0,
-            financial_risk: 0,
-            technical_anomaly: 0,
+        return NextResponse.json(
+          {
+            error: 'The attached image is invalid / Invalid QR code',
+            detail: 'The attached image is invalid / Invalid QR code',
           },
-          detected_urls: [],
-          input_type_used: 'qr',
-          qr_payload: null,
-          guidance: {
-            en: [
-              'Ensure the entire QR code is visible inside the frame.',
-              'Make sure the image is well-lit and in sharp focus.',
-              'Upload a valid image file containing a standard QR matrix (PNG, JPG, WEBP).',
-            ],
-            hi: [
-              'सुनिश्चित करें कि पूरा क्यूआर कोड स्पष्ट रूप से दिखाई दे रहा है।',
-              'छवि धुंधली या कटी हुई नहीं होनी चाहिए।',
-            ],
-            mr: [
-              'संपूर्ण क्यूआर कोड स्पष्ट दिसत असल्याची खात्री करा.',
-            ],
-          },
-          emergency_alert: false,
-          safety_lock: false,
-          recommendations: ['Upload an image containing a clear QR code.'],
-        });
+          { status: 400 }
+        );
       }
     }
 

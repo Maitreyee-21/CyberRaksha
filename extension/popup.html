@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberRaksha Safety Lock</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-shield">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="title">CyberRaksha</div>
+          <div class="subtitle">Safety Lock • Real-Time Guard</div>
+        </div>
+      </div>
+      <div class="status-indicator">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-text" id="status-text">Active</span>
+      </div>
+    </header>
+
+    <!-- Master Protection Toggle Card -->
+    <div class="toggle-card">
+      <div class="toggle-info">
+        <span class="toggle-label">Enable Protection</span>
+        <span class="toggle-desc">Inspect active tabs & block harmful navigation</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="protection-toggle" checked>
+        <span class="slider round"></span>
+      </label>
+    </div>
+
+    <!-- Active Tab Inspection Card -->
+    <section class="section-card">
+      <div class="section-header">
+        <span class="section-title">ACTIVE TAB INSPECTION</span>
+        <button class="btn-icon" id="btn-refresh-tab" title="Re-scan active tab">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 21h5v-5"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="active-url" id="active-url-display">Inspecting current page...</div>
+
+      <div class="scan-result-badge-container">
+        <div class="threat-badge badge-neutral" id="tab-threat-badge">
+          Analyzing...
+        </div>
+        <div class="threat-variety-badge" id="tab-variety-badge" style="display: none;">
+          <!-- Specific variety e.g. Phishing / Malicious Redirect -->
+        </div>
+      </div>
+
+      <div class="reasons-box" id="tab-reasons-box" style="display: none;">
+        <ul id="tab-reasons-list"></ul>
+      </div>
+    </section>
+
+    <!-- Quick Link Scanner -->
+    <section class="section-card">
+      <div class="section-header">
+        <span class="section-title">QUICK LINK SCANNER</span>
+      </div>
+      <div class="quick-scan-form">
+        <input type="text" id="manual-url-input" placeholder="Paste link to test (e.g. sbi-kyc.xyz)..." spellcheck="false">
+        <button id="btn-manual-scan">Check</button>
+      </div>
+      <div id="manual-result" class="manual-result-box" style="display: none;"></div>
+    </section>
+
+    <!-- Blocked Links History Section -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title-with-count">
+          <span class="section-title">BLOCKED LINKS</span>
+          <span class="count-badge" id="blocked-count">0</span>
+        </div>
+        <button class="btn-clear" id="btn-clear-history">Clear</button>
+      </div>
+
+      <div class="blocked-list custom-scroll" id="blocked-links-list">
+        <!-- Rendered dynamically -->
+        <div class="empty-state">No harmful links blocked yet. Real-time guard active.</div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>AI Threat Classification Pipeline • v1.0</span>
+      <a href="https://github.com/Maitreyee-21/CyberRaksha" target="_blank">CyberRaksha</a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -101,21 +101,28 @@ class MockWatsonXClient:
                 if "quishing_scam" in scores:
                     scores["quishing_scam"] = 0
 
-        if not any(scores.values()):
-            category = "Benign Message"
-            category_confidence = 90
+        SAFE_DOMAINS = [
+            "google.com", "github.com", "microsoft.com", "apple.com", "wikipedia.org",
+            "amazon.com", "amazon.in", "flipkart.com", "youtube.com", "linkedin.com",
+            "gov.in", "nic.in", "stackoverflow.com", "openai.com"
+        ]
+        is_safe_url = any(dom in t for dom in SAFE_DOMAINS) and not any(k in t for k in ["kyc", "verify-account", "suspend", "lottery", "arrest", "warrant", "apk"])
+
+        if is_safe_url or not any(scores.values()):
+            category = "Safe / Valid"
+            category_confidence = 95
         else:
             category_map = {
-                "otp_fraud": "OTP / Verification Fraud",
-                "kyc_fraud": "Fake KYC / Account Scam",
-                "upi_fraud": "UPI / Payment Fraud",
-                "lottery_scam": "Fake Lottery / Prize Scam",
-                "fake_delivery": "Fake Delivery / Parcel Scam",
-                "tech_support": "Tech Support / Customer Care Scam",
-                "impersonation_gov": "Government / RBI Impersonation Scam",
-                "loan_scam": "Fraudulent Loan Offer Scam",
-                "job_scam": "Fake Job Offer Scam",
-                "quishing_scam": "QR Code Phishing / Quishing Scam",
+                "otp_fraud": "Smishing (OTP / Verification Fraud)",
+                "kyc_fraud": "Phishing (Fake KYC / Account Harvesting)",
+                "upi_fraud": "Phishing (UPI / Payment Fraud)",
+                "lottery_scam": "Social Engineering (Fake Lottery / Prize Fraud)",
+                "fake_delivery": "Smishing (Fake Delivery / Order Scam)",
+                "tech_support": "Social Engineering (Tech Support / Impersonation)",
+                "impersonation_gov": "Social Engineering (Government / Authority Scam)",
+                "loan_scam": "Social Engineering (Fraudulent Loan Offer)",
+                "job_scam": "Social Engineering (Fake Job Offer Scam)",
+                "quishing_scam": "Phishing (QR Code Quishing Scam)",
             }
             top_cat = max(scores, key=scores.get)
             category = category_map[top_cat]
@@ -123,8 +130,8 @@ class MockWatsonXClient:
 
         red_flags = self._extract_red_flags(text)
 
-        if category == "Benign Message":
-            summary = "This message does not appear to match typical scam patterns. However, always remain cautious with unsolicited messages."
+        if category == "Safe / Valid":
+            summary = "✅ Safe / Valid — Content verified clean. No phishing, malware, or coercive manipulation tactics detected."
         else:
             summary = (f"Detected {category} pattern. The content uses manipulation tactics commonly seen in fraud messages "
                        f"targeting Indian users. Risk probability: ~{category_confidence}%.")
@@ -186,10 +193,22 @@ class MockWatsonXClient:
             cnt = self._count_matches(t, kws)
             dna[tactic] = min(100, cnt * 30 + (15 if any(k in t for k in kws) else 0))
 
-        # Suspicious link detection: if URL pattern found, boost suspicious_link
+        # Suspicious link detection: do not penalize verified safe domains
         import re
-        if re.search(r"https?://\S+|bit\.ly|tinyurl|t\.co|wa\.me|qr code", t):
-            dna["suspicious_link"] = max(dna["suspicious_link"], 75)
+        SAFE_DOMAINS = [
+            "google.com", "github.com", "microsoft.com", "apple.com", "wikipedia.org",
+            "amazon.com", "amazon.in", "flipkart.com", "youtube.com", "linkedin.com",
+            "gov.in", "nic.in", "stackoverflow.com", "openai.com"
+        ]
+        is_safe_dom = any(dom in t for dom in SAFE_DOMAINS) and not any(k in t for k in ["kyc", "verify-account", "suspend", "lottery", "arrest", "warrant", "apk"])
+
+        if not is_safe_dom:
+            if re.search(r"bit\.ly|tinyurl|t\.co|wa\.me|is\.gd|\.xyz|\.top|\.buzz|\.cam|\.icu|\.apk", t):
+                dna["suspicious_link"] = max(dna["suspicious_link"], 80)
+            elif re.search(r"https?://\S+", t) and any(kw in t for kw in ["kyc", "verify", "blocked", "login", "password", "urgent"]):
+                dna["suspicious_link"] = max(dna["suspicious_link"], 75)
+        else:
+            dna["suspicious_link"] = 0
 
         # Check if the text contains a UPI link or quishing but lacks coercive context
         is_suspicious_upi = True

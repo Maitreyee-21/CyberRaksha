@@ -124,6 +124,9 @@ export function RegisterScreen({ onGoToLogin, onGoToHome, onRegistered }: Regist
       // Sync user session to localStorage
       if (typeof window !== 'undefined' && data.user) {
         try {
+          if (data.token) {
+            localStorage.setItem('cyberraksha-token', data.token);
+          }
           localStorage.setItem('cyberraksha-user', JSON.stringify(data.user));
           localStorage.setItem('cyberraksha-profile', JSON.stringify({
             name: data.user.fullName,

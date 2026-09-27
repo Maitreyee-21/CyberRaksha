@@ -17,6 +17,7 @@ import {
   Share2,
   ShieldCheck,
   ShieldX,
+  ShieldAlert,
   TriangleAlert,
   UserRound,
 } from 'lucide-react';
@@ -493,10 +494,18 @@ export default function ResultsPanel({ result, loading, error, onReset }: Result
                 {t.checkAnother}
               </button>
 
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="border-white/10 bg-white/[0.03] text-[10px] text-slate-400">
-                  {result.scam_category}
-                </Badge>
+              <div className="flex flex-wrap items-center gap-2">
+                {state === 'safe' ? (
+                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-semibold px-2.5 py-0.5 text-xs">
+                    <ShieldCheck size={12} className="mr-1 text-emerald-400" />
+                    Status: Safe / Valid
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className={`font-semibold px-2.5 py-0.5 text-xs ${state === 'unsafe' ? 'border-rose-500/40 bg-rose-500/15 text-rose-300' : 'border-amber-500/40 bg-amber-500/15 text-amber-300'}`}>
+                    <ShieldAlert size={12} className={`mr-1 ${state === 'unsafe' ? 'text-rose-400' : 'text-amber-400'}`} />
+                    Threat Variety: {result.threat_type || result.threat_variety || result.scam_category}
+                  </Badge>
+                )}
                 {result.similarity_match && (
                   <Badge variant="secondary" className="border-zinc-700 bg-zinc-800 text-[10px] text-zinc-300">
                     <DatabaseZap size={10} className="mr-1 text-teal-400" />
@@ -516,6 +525,15 @@ export default function ResultsPanel({ result, loading, error, onReset }: Result
               <h2 className={`text-4xl font-black tracking-tight sm:text-5xl ${accentClasses.text}`}>
                 {stateData.title}
               </h2>
+
+              {state !== 'safe' && (
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-3.5 py-1 text-xs font-bold text-rose-300">
+                  <span>Detected Threat:</span>
+                  <span className="text-white underline underline-offset-2">
+                    {result.threat_type || result.threat_variety || result.scam_category}
+                  </span>
+                </div>
+              )}
 
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
                 {stateData.message}

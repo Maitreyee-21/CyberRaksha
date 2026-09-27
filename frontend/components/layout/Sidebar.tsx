@@ -95,6 +95,29 @@ export function Sidebar({
 
   const [safetyLockEnabled, setSafetyLockEnabled] =
     useState(true);
+  const [isAuthenticated, setIsAuthenticated] =
+    useState(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const user = window.localStorage.getItem('cyberraksha-user');
+        const token = window.localStorage.getItem('cyberraksha-token');
+        setIsAuthenticated(Boolean(user || token));
+      } catch {
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuth();
+    window.addEventListener('cyberraksha-profile-updated', checkAuth);
+    window.addEventListener('storage', checkAuth);
+
+    return () => {
+      window.removeEventListener('cyberraksha-profile-updated', checkAuth);
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, []);
 
   useEffect(() => {
     setHistory(
@@ -175,7 +198,7 @@ export function Sidebar({
       icon: History,
     },
     {
-      label: language === 'en' ? 'Safety Log' : navigationText.safetyLock,
+      label: isAuthenticated ? (navigationText.safetyLock || 'Safety Lock') : (language === 'en' ? 'Safety Log' : navigationText.safetyLock),
       path: '/safety-lock',
       icon: ShieldCheck,
     },

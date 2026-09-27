@@ -374,7 +374,7 @@ export default function HomePage() {
         type === 'image') &&
       !scanFile
     ) {
-      setError(homeText.imageRequired);
+      setError('The attached image is invalid / Invalid QR code');
       return;
     }
 
@@ -461,16 +461,20 @@ export default function HomePage() {
         response
       );
     } catch (err: unknown) {
-      if (
-        err instanceof Error &&
-        err.message
-      ) {
-        setError(err.message);
-      } else {
-        setError(
-          homeText.scanError
-        );
-      }
+      const message =
+        err instanceof Error
+          ? err.message
+          : '';
+
+      const finalError =
+        type === 'qr' ||
+        type === 'image' ||
+        message.toLowerCase().includes('image') ||
+        message.toLowerCase().includes('qr')
+          ? 'The attached image is invalid / Invalid QR code'
+          : message || homeText.scanError;
+
+      setError(finalError);
     } finally {
       setLoading(false);
     }
@@ -808,7 +812,7 @@ export default function HomePage() {
                 size={19}
               />
             }
-            label="Safety Log"
+            label={identity ? (navigationText.safetyLock || 'Safety Lock') : 'Safety Log'}
             onClick={() => {
               router.push(
                 '/safety-lock'
@@ -1847,42 +1851,42 @@ export default function HomePage() {
           </div>
 
           {/* =================================================
-              ERROR
+              ERROR (STANDARDIZED PURE RED #ff0000)
           ================================================= */}
 
           {error && (
             <div
+              id="scanner-inline-error"
               className="
                 mx-auto
                 mt-5
-
                 max-w-[1180px]
-
                 rounded-xl
-
                 border
-                border-red-500/20
-
-                bg-red-500/10
-
+                border-[#ff0000]/40
+                bg-[#ff0000]/10
                 px-4
                 py-3
-
                 text-center
-                text-[12px]
-
-                text-red-300
+                text-sm
+                font-semibold
+                tracking-wide
               "
+              style={{ color: '#ff0000' }}
             >
-              {error}
+              <span style={{ color: '#ff0000' }}>
+                {selectedType === 'qr' || selectedType === 'image' || error.toLowerCase().includes('image') || error.toLowerCase().includes('qr')
+                  ? 'The attached image is invalid / Invalid QR code'
+                  : error}
+              </span>
             </div>
           )}
 
           {/* =================================================
-              RESULTS
+              RESULTS INLINE
           ================================================= */}
 
-          {result && (
+          {(result || loading) && (
             <div
               ref={resultContainerRef}
               id="scan-result-container"

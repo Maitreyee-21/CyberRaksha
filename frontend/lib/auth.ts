@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { findUserById, UserRecord } from './db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'cyberraksha-secure-production-key-2026-auth';
@@ -50,12 +50,29 @@ export function verifyAuthToken(token: string): TokenPayload | null {
 }
 
 /**
- * Extract the current authenticated user from request cookies.
+ * Extract the current authenticated user from request cookies or Authorization Bearer header.
  */
 export async function getCurrentUser(): Promise<Omit<UserRecord, 'passwordHash'> | null> {
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+    let token: string | undefined;
+
+    // 1. Try reading from Authorization: Bearer <token> header
+    try {
+      const headerList = headers();
+      const authHeader = headerList.get('authorization');
+      if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
+        token = authHeader.substring(7).trim();
+      }
+    } catch {
+      // headers() may fail outside of request context
+    }
+
+    // 2. Fall back to reading from HTTP-only cookie
+    if (!token) {
+      const cookieStore = cookies();
+      token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+    }
+
     if (!token) return null;
 
     const payload = verifyAuthToken(token);
@@ -70,3 +87,4 @@ export async function getCurrentUser(): Promise<Omit<UserRecord, 'passwordHash'>
     return null;
   }
 }
+

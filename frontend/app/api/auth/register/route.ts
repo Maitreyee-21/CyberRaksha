@@ -125,6 +125,7 @@ export async function POST(req: NextRequest) {
         ok: true,
         message: 'Registration successful! Redirecting to login...',
         user: safeUser,
+        token,
       },
       { status: 201 }
     );
@@ -143,6 +144,18 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (err: any) {
     console.error('Registration error:', err);
+    if (err?.message?.includes('DUPLICATE_EMAIL')) {
+      return NextResponse.json(
+        { ok: false, error: 'An account with this email already exists. Please log in.' },
+        { status: 409 }
+      );
+    }
+    if (err?.message?.includes('DUPLICATE_USERNAME')) {
+      return NextResponse.json(
+        { ok: false, error: 'This username is already taken. Please choose another or log in.' },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { ok: false, error: 'An internal server error occurred. Please try again.' },
       { status: 500 }

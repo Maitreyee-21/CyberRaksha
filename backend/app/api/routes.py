@@ -3,6 +3,7 @@ import base64
 from typing import Dict, Any
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from pydantic import BaseModel
 
 from app.core.schemas import (
     ScanRequest,
@@ -19,6 +20,32 @@ from app.security import evaluate_safety_policy, analyze_qr_payload
 
 router = APIRouter(prefix="/api", tags=["CyberRaksha Scan API"])
 logger = logging.getLogger(__name__)
+
+# In-memory Protection Mode state (default ON)
+_protection_mode_state = {"enabled": True}
+
+class ProtectionModeRequest(BaseModel):
+    enabled: bool
+
+@router.get("/protection-mode")
+def get_protection_mode():
+    enabled = _protection_mode_state["enabled"]
+    return {
+        "enabled": enabled,
+        "status": "active" if enabled else "paused",
+        "message": "Protection Mode is ON" if enabled else "Protection Mode is OFF",
+    }
+
+@router.post("/protection-mode")
+def set_protection_mode(request: ProtectionModeRequest):
+    _protection_mode_state["enabled"] = bool(request.enabled)
+    enabled = _protection_mode_state["enabled"]
+    logger.info(f"Protection mode state updated: enabled={enabled}")
+    return {
+        "enabled": enabled,
+        "status": "active" if enabled else "paused",
+        "message": "Protection Mode is ON" if enabled else "Protection Mode is OFF",
+    }
 
 
 @router.post("/scan", response_model=ScanResult)
@@ -94,70 +121,9 @@ async def _run_pipeline(body: Dict[str, Any]) -> ScanResult:
         if input_type == InputType.QR and not qr_payload:
             user_ctx = (body.get("text_content") or "").strip()
             if not user_ctx:
-                from app.core.schemas import (
-                    ScamDNA,
-                    ScamClassification,
-                    ScamFingerprint,
-                    VariantDetection,
-                    MultilingualGuidance,
-                    GuidanceItem,
-                )
-                return ScanResult(
-                    risk_level=RiskLevel.LOW,
-                    risk_score=0,
-                    scam_category="Invalid QR Code / No QR Detected",
-                    summary="Invalid QR Code: No readable QR code could be detected in this image. Please upload a clear image containing a valid QR code.",
-                    red_flags=[
-                        "No valid QR code pattern was found in the uploaded image",
-                        "The image may be blurred, cropped, low-contrast, or not a QR code image",
-                    ],
-                    scam_dna=ScamDNA(urgency=0, fear=0, impersonation=0, suspicious_link=0, payment_pressure=0),
-                    scam_classification=ScamClassification(
-                        category="Invalid QR Code",
-                        confidence=95,
-                        explanation="No decodable QR matrix found in visual payload.",
-                    ),
-                    scam_fingerprint=ScamFingerprint(
-                        name="Invalid Visual Matrix",
-                        description="The image provided does not contain a recognizable QR barcode.",
-                        confidence=95,
-                    ),
-                    variant_detection=VariantDetection(
-                        detected=False,
-                        match_type="none",
-                        explanation="No QR payload available for threat comparison.",
-                    ),
-                    emergency_alert=False,
-                    safety_lock=False,
-                    detected_urls=[],
-                    qr_payload=None,
-                    guidance=MultilingualGuidance(
-                        en=GuidanceItem(
-                            title="Invalid QR Code Guidance",
-                            steps=[
-                                "Ensure the entire QR code is visible inside the frame.",
-                                "Make sure the image is well-lit and in sharp focus.",
-                                "Check that the uploaded file is in a supported image format (PNG, JPG, WEBP).",
-                            ],
-                        ),
-                        hi=GuidanceItem(
-                            title="अमान्य क्यूआर कोड निर्देश",
-                            steps=[
-                                "सुनिश्चित करें कि पूरा क्यूआर कोड स्पष्ट रूप से दिखाई दे रहा है।",
-                                "छवि धुंधली या कटी हुई नहीं होनी चाहिए।",
-                                "केवल मान्य क्यूआर कोड वाली छवि ही अपलोड करें।",
-                            ],
-                        ),
-                        mr=GuidanceItem(
-                            title="अवैध क्यूआर कोड मार्गदर्शन",
-                            steps=[
-                                "संपूर्ण क्यूआर कोड स्पष्ट दिसत असल्याची खात्री करा.",
-                                "प्रतिमा अंधुक किंवा कापलेली नसावी.",
-                            ],
-                        ),
-                    ),
-                    input_type_used="qr",
-                    api_mode="validation_check",
+                raise HTTPException(
+                    status_code=400,
+                    detail="This image is invalid or no QR code was detected. Please upload a clear QR code image.",
                 )
 
         layer1 = heuristic_layer1_check(normalized_text)

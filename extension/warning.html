@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harmful Link Blocked - CyberRaksha Safety Lock</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #070a0f;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      max-width: 640px;
+      width: 100%;
+      background: #0d131a;
+      border: 2px solid #ff0000;
+      border-radius: 20px;
+      padding: 40px 32px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(255, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ff0000, #ff4d4d, #ff0000);
+    }
+    .icon-container {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: rgba(255, 0, 0, 0.12);
+      border: 2px solid #ff0000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(255, 0, 0, 0.18);
+      border: 1px solid #ff0000;
+      color: #ff0000;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      padding: 5px 16px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    h1 {
+      color: #ff0000;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 14px;
+    }
+    p.desc {
+      color: #94a3b8;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .meta-box {
+      background: #05080c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+      margin-bottom: 28px;
+    }
+    .meta-row {
+      margin-bottom: 10px;
+    }
+    .meta-row:last-child {
+      margin-bottom: 0;
+    }
+    .meta-label {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .meta-value {
+      font-family: monospace;
+      font-size: 13px;
+      color: #f87171;
+      word-break: break-all;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .btn {
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-danger {
+      background: #ff0000;
+      color: #ffffff;
+      box-shadow: 0 0 25px rgba(255, 0, 0, 0.45);
+    }
+    .btn-danger:hover {
+      background: #e60000;
+      transform: translateY(-1px);
+    }
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+    .footer-note {
+      margin-top: 24px;
+      font-size: 11px;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-container">
+      🛑
+    </div>
+
+    <div class="badge" id="threat-badge">
+      CYBERRAKSHA SAFETY LOCK • HARMFUL THREAT
+    </div>
+
+    <h1>This link is harmful. Do not click or proceed.</h1>
+
+    <p class="desc">
+      CyberRaksha Safety Lock intercepted and neutralized navigation to this site. The destination demonstrates verified characteristics of financial fraud, credential phishing, malicious redirect, or untrusted payload delivery.
+    </p>
+
+    <div class="meta-box">
+      <div class="meta-row">
+        <div class="meta-label">Blocked URL</div>
+        <div class="meta-value" id="blocked-url">--</div>
+      </div>
+      <div class="meta-row">
+        <div class="meta-label">Threat Classification</div>
+        <div class="meta-value" style="color: #ff0000; font-weight: bold;" id="threat-type">--</div>
+      </div>
+      <div class="meta-row">
+        <div class="meta-label">Incident Logged</div>
+        <div class="meta-value" style="color: #94a3b8;" id="timestamp-val">Just now</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-danger" id="btn-back">
+        🛡️ Return to Safety
+      </button>
+      <button class="btn btn-outline" id="btn-close">
+        Close Tab
+      </button>
+    </div>
+
+    <div class="footer-note">
+      Protected by CyberRaksha Real-Time Threat Intelligence & Safety Lock.
+    </div>
+  </div>
+
+  <script src="warning.js"></script>
+</body>
+</html>
