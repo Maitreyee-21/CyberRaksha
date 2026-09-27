@@ -32,6 +32,12 @@ import {
   PhoneCall,
   Radio,
   Share2,
+  Heart,
+  HelpCircle,
+  Users,
+  Check,
+  ChevronDown,
+  ShieldAlert,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -47,89 +53,140 @@ interface LandingPageProps {
 const FEATURES = [
   {
     icon: Link2,
-    title: 'Suspicious URL Detection',
-    description: 'Detect phishing and malicious links before clicking.',
+    title: 'Safe Link Verifier',
+    description: 'Received a strange link on WhatsApp, SMS, or Telegram? Check if it is legitimate before tapping.',
     accent: 'from-cyan-500/20 to-teal-500/10',
     iconColor: 'text-cyan-400',
   },
   {
     icon: QrCode,
-    title: 'QR Code Security Analysis',
-    description: 'Scan QR codes and identify hidden malicious destinations.',
+    title: 'QR Code Scam Shield',
+    description: 'Verify payment QR codes safely. Remember: scanning a QR code only SENDS money, never receives it.',
     accent: 'from-teal-500/20 to-emerald-500/10',
     iconColor: 'text-teal-400',
   },
   {
-    icon: Cpu,
-    title: 'AI-Powered Threat Intelligence',
-    description: 'Intelligent analysis to identify potential cyber threats.',
-    accent: 'from-blue-500/20 to-indigo-500/10',
-    iconColor: 'text-blue-400',
-  },
-  {
     icon: MessageSquare,
-    title: 'Scam Message Detection',
-    description: 'Analyze suspicious messages and identify scam patterns.',
+    title: 'Scam Message Analyzer',
+    description: 'Spot fake electricity bills, lottery rewards, bank account blocks, and deceptive job lures in seconds.',
     accent: 'from-purple-500/20 to-pink-500/10',
     iconColor: 'text-purple-400',
   },
   {
     icon: AlertTriangle,
-    title: 'Risk Score & Explanation',
-    description: 'Get a clear security score along with understandable reasons.',
+    title: 'Plain-English Safety Score',
+    description: 'No intimidating technical jargon. You get an honest 0 to 100 risk score with clear reasons in everyday language.',
     accent: 'from-amber-500/20 to-orange-500/10',
     iconColor: 'text-amber-400',
   },
   {
     icon: ShieldCheck,
-    title: 'Cyber Safety Recommendations',
-    description: 'Receive actionable steps to stay protected online.',
+    title: 'Calm Step-by-Step Advice',
+    description: 'If something looks suspicious, we guide you through exact steps to protect your money, identity, and family.',
     accent: 'from-emerald-500/20 to-teal-500/10',
     iconColor: 'text-emerald-400',
+  },
+  {
+    icon: Heart,
+    title: 'Built for Families & Seniors',
+    description: 'Designed to protect parents, grandparents, students, and everyday citizens with zero technical complexity.',
+    accent: 'from-rose-500/20 to-pink-500/10',
+    iconColor: 'text-rose-400',
   },
 ];
 
 const HOW_IT_WORKS_STEPS = [
   {
-    title: 'Upload or Paste',
-    description: 'Paste a URL, upload a QR code, image, or suspicious content.',
+    title: '1. Share What Looks Suspicious',
+    description: 'Paste a link, upload a screenshot, or type in that strange text message you received.',
     icon: UploadCloud,
-    tag: 'Input Intake',
+    tag: 'Private & Simple',
   },
   {
-    title: 'AI Security Analysis',
-    description: 'CyberRaksha intelligently analyzes multiple threat indicators.',
+    title: '2. We Review It Instantly',
+    description: 'CyberRaksha checks hidden red flags, fake bank websites, and manipulative psychological traps.',
     icon: Search,
-    tag: 'Granite AI Defense',
+    tag: 'Fast AI Verification',
   },
   {
-    title: 'Get Protection Insights',
-    description: 'Receive a risk score, threat explanation, and safety recommendations.',
+    title: '3. Get Calm, Actionable Advice',
+    description: 'Know right away whether it is safe or risky, with clear guidance on what to do next.',
     icon: ShieldCheck,
-    tag: 'Actionable Shield',
+    tag: 'Peace of Mind',
   },
 ];
 
-const TRUST_METRICS = [
+const COMMON_SCAMS = [
   {
-    icon: Sparkles,
-    title: 'AI Powered Analysis',
-    description: 'Continuous threat intelligence models trained on confirmed digital scam vectors.',
+    category: 'Electricity Bill Disconnection',
+    sample: '"Dear Consumer, your power will be cut tonight at 9:30 PM due to an unpaid bill. Call officer Rajesh at 98765-XXXXX immediately to update..."',
+    tactic: 'Creates false panic and urgency to trick you into downloading a remote-control screen app or making an unauthorized transfer.',
+    protectionTip: 'Electricity providers never send disconnection threats from personal WhatsApp or mobile numbers.',
+    badgeColor: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
   },
   {
-    icon: Layers,
-    title: 'Multi-Source Threat Detection',
-    description: 'Multi-layered verification across DNS records, domain reputation, and NLP models.',
+    category: 'Fake Bank KYC / PAN Block',
+    sample: '"Dear Customer, your bank account is suspended due to pending KYC. Click http://sbi-kyc-update.xyz to verify your PAN card within 24 hours."',
+    tactic: 'Impersonates your bank with a lookalike website to capture your login credentials, MPIN, and secret SMS OTPs.',
+    protectionTip: 'Banks will NEVER ask you to update KYC credentials via links sent over SMS.',
+    badgeColor: 'border-red-500/30 bg-red-500/10 text-red-400',
   },
   {
-    icon: Clock,
-    title: 'Instant Risk Assessment',
-    description: 'High-speed heuristic scans evaluate danger indicators in real time.',
+    category: 'Part-Time Job / Telegram Lure',
+    sample: '"Earn ₹3,000 to ₹8,000 daily from home! Just like YouTube videos or give 5-star Google ratings. Join our VIP Telegram channel to claim ₹250 bonus..."',
+    tactic: 'Gives small initial payouts to build trust, then coerces you into depositing your own savings into fake crypto wallets.',
+    protectionTip: 'Legitimate employers never ask candidates to deposit money to receive their salary.',
+    badgeColor: 'border-purple-500/30 bg-purple-500/10 text-purple-400',
   },
   {
-    icon: Shield,
-    title: 'Privacy Focused',
-    description: 'Zero logging of personal scanned queries; secure ephemeral sandbox processing.',
+    category: 'QR Code Cashback Trap',
+    sample: '"Congratulations! You won ₹1,500 cashback on your recent shopping. Scan this QR code to receive the money directly into your bank account."',
+    tactic: 'Scammers send a payment request disguised as a reward QR code that debits money from YOUR account.',
+    protectionTip: 'Golden Rule: You NEVER need to scan a QR code or enter your UPI PIN to RECEIVE money.',
+    badgeColor: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
+  },
+];
+
+const REAL_STORIES = [
+  {
+    name: 'Priya N.',
+    location: 'Pune',
+    scenario: 'Fake Pension KYC SMS',
+    quote: 'My 68-year-old father received a message saying his pension was stopped due to pending KYC. We checked the link on CyberRaksha and it immediately flagged the website as a fake bank clone. Saved his life savings.',
+    avatarColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  },
+  {
+    name: 'Rohan S.',
+    location: 'Jaipur',
+    scenario: 'OLX Buyer QR Code',
+    quote: 'A buyer on OLX sent me a QR code claiming it would transfer ₹15,000 to my account. CyberRaksha clearly explained that scanning a QR code only sends money. That single tip saved me from a major loss.',
+    avatarColor: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  },
+  {
+    name: 'Sunita V.',
+    location: 'Delhi',
+    scenario: 'WhatsApp Lottery Lure',
+    quote: 'Our family WhatsApp group was flooded with a fake lottery link with our photo. CyberRaksha gave us a plain, reassuring explanation we could forward to all relatives so nobody clicked.',
+    avatarColor: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+  },
+];
+
+const HUMAN_FAQS = [
+  {
+    q: 'How does CyberRaksha know if a message or link is dangerous?',
+    a: 'CyberRaksha analyzes subtle red flags: deceptive domain spellings (like "sbi-kyc.xyz"), false urgency phrases ("arrest warrant", "power cut tonight"), coercive requests for OTPs, and verified threat databases. We explain these indicators in simple, human words.',
+  },
+  {
+    q: 'Is my personal data or message saved on your servers?',
+    a: 'Never. Your trust is our foundation. Scans are processed ephemerally in volatile memory. We do not sell, store, or profile your personal conversations or links.',
+  },
+  {
+    q: 'What should I do if I already clicked a suspicious link or sent money?',
+    a: 'Do not panic. Immediately disconnect your internet or turn on Airplane Mode, call your bank customer care to freeze your net banking and cards, and dial the National Cyber Crime Helpline at 1930 (Toll-Free, 24x7).',
+  },
+  {
+    q: 'Can my parents or grandparents use this without tech knowledge?',
+    a: 'Yes, absolutely. CyberRaksha was designed specifically with families and non-technical citizens in mind. Simply paste a message or upload an image and get a clear, calm explanation in plain language.',
   },
 ];
 
@@ -186,6 +243,29 @@ const SOCIAL_CHANNELS = [
   },
 ];
 
+const TRUST_METRICS = [
+  {
+    icon: ShieldCheck,
+    title: 'Zero Data Retention',
+    description: 'Your submitted URLs, messages, and QR codes are analyzed in volatile memory and never retained or sold.',
+  },
+  {
+    icon: Lock,
+    title: 'Bank-Grade Security',
+    description: 'All network transmissions utilize modern TLS encryption to keep your scans private and tamper-proof.',
+  },
+  {
+    icon: Heart,
+    title: '100% Free Public Resource',
+    description: 'Built as a compassionate defense tool for families, students, and seniors across India.',
+  },
+  {
+    icon: PhoneCall,
+    title: 'Helpline 1930 Integration',
+    description: 'Directly aligned with National Cyber Crime Reporting Portal protocols for rapid emergency assistance.',
+  },
+];
+
 export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
   // Registration modal state
   const [registerOpen, setRegisterOpen] = React.useState(false);
@@ -226,6 +306,8 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
   const [searchQuery, setSearchQuery] = React.useState<string>('');
   const [selectedArticle, setSelectedArticle] = React.useState<CyberArticle | null>(null);
   const [lastRefreshed, setLastRefreshed] = React.useState<string>('Just now');
+  const [openFaq, setOpenFaq] = React.useState<number | null>(null);
+  const [selectedScamTab, setSelectedScamTab] = React.useState<number>(0);
 
   const fetchNews = React.useCallback(async () => {
     setNewsLoading(true);
@@ -425,69 +507,123 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
         </div>
       </nav>
 
-      {/* ═══════════════════════════════ 2. UPPER-CENTERED HERO SECTION ═══════════════════════════════ */}
+      {/* ═══════════════════════════════ 2. UPPER-CENTERED HERO SECTION (HUMANIZED) ═══════════════════════════════ */}
       <section className="relative z-10 mx-auto max-w-5xl px-6 sm:px-10 lg:px-12 pt-8 sm:pt-10 lg:pt-12 pb-12 lg:pb-14 text-center">
         <div className="flex flex-col items-center mx-auto space-y-5">
 
-          {/* Main Heading (Upper Centered) */}
+          {/* Reassuring Care Badge */}
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-teal-500/30 bg-teal-500/10 px-4 py-1.5 text-xs font-semibold text-teal-300 shadow-sm">
+            <Heart size={13} className="text-teal-400 fill-teal-400/30" />
+            <span>Caring Digital Protection for You &amp; Your Loved Ones</span>
+            <span className="text-zinc-500 font-mono">|</span>
+            <span className="text-zinc-300 font-normal text-[11px]">100% Free &amp; Confidential</span>
+          </div>
+
+          {/* Main Heading (Warm, Empowering, Human) */}
           <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-[3.75rem] font-extrabold tracking-tight text-zinc-50 leading-[1.12] max-w-3xl">
-            Your Digital Shield Against{' '}
-            <span className="block mt-2 bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(6,182,212,0.35)]">
-              Cyber Threats
+            Never Feel Unsure About a Link or Message{' '}
+            <span className="block mt-2 bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(6,182,212,0.35)]">
+              Ever Again.
             </span>
           </h1>
 
-          {/* Live Security Threat Intel Chip (Positioned Below Main Heading) */}
-          <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-400 shadow-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-            </span>
-            <span>AI Threat Intel v2.4</span>
-            <span className="text-zinc-500 font-mono">|</span>
-            <span className="text-zinc-300 normal-case font-normal text-[11px]">Real-Time Security Active</span>
-          </div>
-
-          {/* Supporting Copy (Centered) */}
+          {/* Supporting Copy (Empathetic, Clear, Non-Jargon) */}
           <p className="text-base sm:text-lg text-zinc-300/90 leading-relaxed max-w-2xl mx-auto pt-1">
-            CyberRaksha uses intelligent AI-powered analysis to help detect suspicious links, QR codes, messages, images, and digital threats before they can harm you.
+            Received an unexpected WhatsApp message, an urgent bank alert, or a payment QR code? We help you check what is safe and what is a scam in plain words — so you can protect your hard-earned money and peace of mind.
           </p>
 
-          {/* Supporting Cybersecurity Signals (Centered 4-column Grid) */}
+          {/* Supporting Human Signals (Centered 4-column Grid) */}
           <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3.5 max-w-3xl w-full text-left">
-            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3 backdrop-blur-sm shadow-sm transition hover:border-cyan-500/30">
-              <ShieldCheck size={18} className="text-cyan-400 shrink-0" aria-hidden="true" />
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3.5 backdrop-blur-sm shadow-sm transition hover:border-cyan-500/30 hover:bg-zinc-900/90">
+              <MessageSquare size={18} className="text-cyan-400 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-zinc-200 truncate">Zero-Day Shield</div>
-                <div className="text-[10px] text-zinc-400 truncate">Heuristic AI models</div>
+                <div className="text-xs font-semibold text-zinc-200 truncate">WhatsApp &amp; SMS</div>
+                <div className="text-[10px] text-zinc-400 truncate">Detect fake alerts &amp; threats</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3 backdrop-blur-sm shadow-sm transition hover:border-teal-500/30">
-              <Lock size={18} className="text-teal-400 shrink-0" aria-hidden="true" />
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3.5 backdrop-blur-sm shadow-sm transition hover:border-teal-500/30 hover:bg-zinc-900/90">
+              <QrCode size={18} className="text-teal-400 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-zinc-200 truncate">Zero-Log Privacy</div>
-                <div className="text-[10px] text-zinc-400 truncate">Transient RAM analysis</div>
+                <div className="text-xs font-semibold text-zinc-200 truncate">UPI &amp; QR Shield</div>
+                <div className="text-[10px] text-zinc-400 truncate">Never lose money receiving</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3 backdrop-blur-sm shadow-sm transition hover:border-blue-500/30">
-              <Activity size={18} className="text-blue-400 shrink-0" aria-hidden="true" />
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3.5 backdrop-blur-sm shadow-sm transition hover:border-blue-500/30 hover:bg-zinc-900/90">
+              <ShieldCheck size={18} className="text-blue-400 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-zinc-200 truncate">Multi-Format</div>
-                <div className="text-[10px] text-zinc-400 truncate">URLs, SMS, QR &amp; Images</div>
+                <div className="text-xs font-semibold text-zinc-200 truncate">Plain Explanations</div>
+                <div className="text-[10px] text-zinc-400 truncate">Zero tech jargon, pure clarity</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3 backdrop-blur-sm shadow-sm transition hover:border-purple-500/30">
-              <Zap size={18} className="text-purple-400 shrink-0" aria-hidden="true" />
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3.5 backdrop-blur-sm shadow-sm transition hover:border-purple-500/30 hover:bg-zinc-900/90">
+              <Lock size={18} className="text-purple-400 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
-                <div className="text-xs font-semibold text-zinc-200 truncate">Instant Rating</div>
-                <div className="text-[10px] text-zinc-400 truncate">Clear risk score 0–100</div>
+                <div className="text-xs font-semibold text-zinc-200 truncate">100% Private</div>
+                <div className="text-[10px] text-zinc-400 truncate">Never stored or tracked</div>
               </div>
             </div>
           </div>
 
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════ 2.1 COMMON SCAMS WE PROTECT YOU FROM ═══════════════════════════════ */}
+      <section className="relative z-10 mx-auto max-w-6xl px-6 sm:px-10 lg:px-12 py-10 text-center">
+        <div className="mx-auto max-w-3xl mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-amber-400">
+            <ShieldAlert size={13} />
+            <span>Real Scams Hitting Citizens Everyday</span>
+          </div>
+          <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            Scams Prey on Fear, Urgency &amp; Trust. Here is How to Spot Them:
+          </h2>
+          <p className="mt-2 text-xs sm:text-sm text-zinc-400 leading-relaxed">
+            These are actual messages and payment tricks received by Indian families every single day. See the tactic and the golden rule to stay safe:
+          </p>
+        </div>
+
+        {/* 4 Everyday Scam Scenario Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
+          {COMMON_SCAMS.map((item, idx) => (
+            <div
+              key={item.category}
+              className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6 backdrop-blur-md transition-all hover:border-cyan-500/40 hover:bg-zinc-900/90 shadow-sm flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${item.badgeColor}`}>
+                    {item.category}
+                  </span>
+                  <span className="text-[11px] text-zinc-500 font-mono">Scenario #{idx + 1}</span>
+                </div>
+
+                {/* Simulated Scam Message Box */}
+                <div className="rounded-2xl border border-white/5 bg-zinc-950/80 p-3.5 mb-4 text-xs font-mono text-zinc-300 leading-relaxed italic border-l-2 border-l-amber-500/80">
+                  {item.sample}
+                </div>
+
+                <div className="space-y-1.5 mb-4">
+                  <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wide">
+                    The Scammer&apos;s Trap:
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    {item.tactic}
+                  </p>
+                </div>
+              </div>
+
+              {/* Protection Tip */}
+              <div className="mt-2 pt-3 border-t border-white/5 flex items-start gap-2.5 text-xs text-emerald-300">
+                <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="text-emerald-400">Golden Rule:</strong> {item.protectionTip}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -721,17 +857,17 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
         </div>
       )}
 
-      {/* ═══════════════════════════════ 3. FEATURES SECTION ═══════════════════════════════ */}
+      {/* ═══════════════════════════════ 3. FEATURES SECTION (HUMANIZED) ═══════════════════════════════ */}
       <section id="features" className="relative z-10 mx-auto max-w-7xl px-6 sm:px-12 py-16 lg:py-20 text-center">
         <div className="mx-auto max-w-2xl mb-12">
-          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-400">
-            Deep Capabilities
+          <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-teal-300">
+            Care &amp; Protection
           </div>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-zinc-50">
-            Advanced Cyber Defense Toolkit
+            Thoughtful Features Designed to Keep You Safe
           </h2>
           <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
-            CyberRaksha integrates multiple intelligence-gathering vectors to provide a complete picture of your safety before interactions occur.
+            Whether it is an unexpected WhatsApp forward, a suspicious bank link, or a payment QR code — we check it quietly and explain the risks in plain everyday language.
           </p>
         </div>
 
@@ -755,18 +891,18 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════ 4. HOW IT WORKS SECTION ═══════════════════════════════ */}
+      {/* ═══════════════════════════════ 4. HOW IT WORKS SECTION (HUMANIZED) ═══════════════════════════════ */}
       <section id="how-it-works" className="relative z-10 border-t border-white/5 bg-zinc-900/20 py-16 lg:py-20 px-6 sm:px-12 text-center">
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto max-w-2xl mb-12">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-400">
-              Step-By-Step Defense
+              Simple 3-Step Check
             </div>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-zinc-50">
-              Simple Integration, Dynamic Protection
+              No Complicated Settings. Just Plain Clarity.
             </h2>
             <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
-              Secure checking works in seconds to evaluate digital materials for danger points.
+              You don&apos;t need to be a cybersecurity specialist to protect your savings and family. Here is how simple it is:
             </p>
           </div>
 
@@ -795,6 +931,59 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
         </div>
       </section>
 
+      {/* ═══════════════════════════════ 4.1 CITIZEN STORIES & REAL EXPERIENCES ═══════════════════════════════ */}
+      <section className="relative z-10 border-t border-white/5 bg-zinc-950 py-16 lg:py-20 px-6 sm:px-12 text-center">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-2xl mb-12">
+            <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-rose-300">
+              <Users size={13} />
+              <span>Real Experiences</span>
+            </div>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-zinc-50">
+              Everyday People Protected When It Counted
+            </h2>
+            <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
+              Hear how a quick 10-second check prevented real financial losses and distress for families across India.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+            {REAL_STORIES.map((story) => (
+              <div
+                key={story.name}
+                className="flex flex-col justify-between rounded-3xl border border-white/10 bg-zinc-900/60 p-7 backdrop-blur-md transition-all hover:border-cyan-500/40 hover:bg-zinc-900/90 shadow-sm"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm border ${story.avatarColor}`}>
+                        {story.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-zinc-100">{story.name}</div>
+                        <div className="text-xs text-zinc-400">{story.location}</div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
+                      {story.scenario}
+                    </span>
+                  </div>
+
+                  <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed italic">
+                    &ldquo;{story.quote}&rdquo;
+                  </p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-white/5 flex items-center gap-2 text-xs text-emerald-400">
+                  <CheckCircle2 size={15} />
+                  <span>Fraud prevented successfully</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ═══════════════════════════════ 5. LATEST ARTICLES & THREAT INTELLIGENCE ═══════════════════════════════ */}
       <section id="threat-intelligence" data-section="articles" className="relative z-10 border-t border-white/10 bg-[#080d12] py-16 lg:py-24 px-6 sm:px-12 scroll-mt-14">
         <div id="articles" className="mx-auto max-w-7xl">
@@ -806,7 +995,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
                 Live Cyber Threat Intelligence
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
-                Latest Articles & Verified Advisories
+                Latest Articles &amp; Verified Advisories
               </h2>
               <p className="mt-2.5 max-w-2xl text-sm text-zinc-400 leading-relaxed">
                 Stay informed with genuine, up-to-date threat reports and actionable defense tactics verified by CERT-In, I4C (MHA), NPCI, and RBI.
@@ -966,37 +1155,45 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════ 6. ABOUT SECTION (VISION) ═══════════════════════════════ */}
+      {/* ═══════════════════════════════ 6. ABOUT SECTION (EMPATHETIC VISION & HELPLINE) ═══════════════════════════════ */}
       <section id="about" className="relative z-10 mx-auto max-w-5xl px-6 sm:px-12 py-16 lg:py-20 text-center">
         <div className="rounded-3xl border border-cyan-500/20 bg-gradient-to-b from-cyan-950/30 via-zinc-900/60 to-zinc-900/80 p-8 sm:p-12 backdrop-blur-md shadow-2xl">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-cyan-500/15 text-cyan-400">
-            <Shield size={28} aria-hidden="true" />
+            <Heart size={28} className="text-rose-400 fill-rose-400/20" aria-hidden="true" />
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-3">
-            Our Vision
+          <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-teal-300 mb-3">
+            Our Mission &amp; Purpose
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-zinc-100">
-            Empowering Everyone with Threat Intelligence
+            Protecting What Matters Most: Your Hard-Earned Peace of Mind
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm sm:text-base text-zinc-300 leading-relaxed">
-            CyberRaksha is built with the vision of making cybersecurity simple, accessible, and understandable for everyone. Our intelligent security platform helps users identify potential digital threats and make safer decisions online.
+            CyberRaksha was founded on a simple belief: cybersecurity should never be an elite privilege full of confusing technical jargon. Every parent, student, small business owner, and senior citizen deserves to browse, pay, and communicate online with calm confidence.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-zinc-400">
-            <span>
-              National Cyber Helpline:{' '}
-              <a
-                href="https://cybercrime.gov.in/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition"
-                title="National Cybercrime Reporting Portal (1930)"
-              >
-                1930
-              </a>
-            </span>
-            <span>•</span>
-            <span>Official Portal: <a href="https://cybercrime.gov.in/" target="_blank" rel="noopener noreferrer" className="font-bold text-zinc-200 hover:text-white underline underline-offset-2 transition">cybercrime.gov.in</a></span>
+          {/* Golden Emergency Callout */}
+          <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 max-w-2xl mx-auto text-left flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+              <PhoneCall size={20} />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                Fell for a scam or feeling anxious? Take a deep breath.
+              </h4>
+              <p className="mt-1 text-xs text-zinc-300 leading-relaxed">
+                You are not alone, and help is available right now. Dial <strong className="text-amber-300 font-mono text-sm">1930</strong> (National Cybercrime Reporting Helpline) immediately to help freeze fraudulent bank transactions.
+              </p>
+              <div className="mt-2 text-xs">
+                <a
+                  href="https://cybercrime.gov.in/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-cyan-400 hover:text-cyan-300 underline underline-offset-2 transition"
+                >
+                  File a confidential complaint on cybercrime.gov.in &rarr;
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -1017,6 +1214,55 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
                 <p className="mt-1.5 text-xs text-zinc-400 leading-relaxed">{description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════ 7.1 CITIZEN FAQs & PEACE OF MIND ═══════════════════════════════ */}
+      <section className="relative z-10 border-t border-white/5 bg-zinc-900/30 py-16 lg:py-20 px-6 sm:px-12 text-center">
+        <div className="mx-auto max-w-4xl">
+          <div className="mx-auto max-w-2xl mb-12">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+              <HelpCircle size={13} />
+              <span>Questions &amp; Answers</span>
+            </div>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight text-zinc-50">
+              Clear Answers for Your Peace of Mind
+            </h2>
+            <p className="mt-3 text-sm text-zinc-400 leading-relaxed">
+              We know digital scams can feel confusing and overwhelming. Here is what you need to know:
+            </p>
+          </div>
+
+          <div className="space-y-4 text-left">
+            {HUMAN_FAQS.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className="rounded-2xl border border-white/10 bg-zinc-900/70 overflow-hidden transition-all duration-200 hover:border-cyan-500/30"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    className="w-full flex items-center justify-between p-5 text-left text-sm sm:text-base font-semibold text-zinc-100 hover:text-cyan-300 transition"
+                  >
+                    <span>{faq.q}</span>
+                    <ChevronDown
+                      size={18}
+                      className={`text-zinc-400 transition-transform duration-200 shrink-0 ml-4 ${
+                        isOpen ? 'rotate-180 text-cyan-400' : ''
+                      }`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-zinc-300 leading-relaxed border-t border-white/5 bg-zinc-950/40 animate-in fade-in duration-200">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
