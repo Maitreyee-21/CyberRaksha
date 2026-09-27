@@ -32,6 +32,7 @@ import {
   PhoneCall,
   Radio,
   Share2,
+  Menu,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -189,6 +190,7 @@ const SOCIAL_CHANNELS = [
 export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
   // Registration modal state
   const [registerOpen, setRegisterOpen] = React.useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
   // Registration form state
   const [fullName, setFullName] = React.useState('');
@@ -369,93 +371,161 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
       </div>
 
       {/* ═══════════════════════════════ 1. NAVBAR ═══════════════════════════════ */}
-      <nav className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-zinc-950/90 px-6 sm:px-12 py-3.5 backdrop-blur-md">
-        <a href="#" className="flex items-center gap-2.5 group" aria-label="CyberRaksha Home">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-500/40 bg-cyan-500/15 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)] transition-transform group-hover:scale-105">
-            <Shield size={18} aria-hidden="true" />
+      <nav className="sticky top-0 z-40 border-b border-white/10 bg-zinc-950/90 backdrop-blur-md">
+        <div className="flex items-center justify-between px-4 sm:px-8 lg:px-12 py-3 sm:py-3.5">
+          <a href="#" className="flex items-center gap-2 sm:gap-2.5 group shrink-0" aria-label="CyberRaksha Home">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-500/40 bg-cyan-500/15 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)] transition-transform group-hover:scale-105">
+              <Shield size={17} aria-hidden="true" />
+            </div>
+            <span className="text-base font-bold tracking-tight text-zinc-100">
+              Cyber<span className="text-cyan-400">Raksha</span>
+            </span>
+          </a>
+
+          {/* Navigation links (Desktop) */}
+          <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-white">
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-white hover:text-cyan-400 transition-colors">
+              Home
+            </button>
+            <button onClick={() => scrollToSection('features')} className="text-white hover:text-cyan-400 transition-colors">
+              Features
+            </button>
+            <button onClick={() => scrollToSection('how-it-works')} className="text-white hover:text-cyan-400 transition-colors">
+              How It Works
+            </button>
+            <button onClick={() => scrollToSection('threat-intelligence')} className="text-white hover:text-cyan-400 transition-colors flex items-center gap-1.5 group">
+              <Radio size={13} className="text-white group-hover:text-cyan-400 transition-colors" />
+              Threat Intelligence
+            </button>
+            <button onClick={() => scrollToSection('about')} className="text-white hover:text-cyan-400 transition-colors">
+              About
+            </button>
           </div>
-          <span className="text-base font-bold tracking-tight text-zinc-100">
-            Cyber<span className="text-cyan-400">Raksha</span>
-          </span>
-        </a>
 
-        {/* Navigation links */}
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-white hover:text-cyan-400 transition-colors">
-            Home
-          </button>
-          <button onClick={() => scrollToSection('features')} className="text-white hover:text-cyan-400 transition-colors">
-            Features
-          </button>
-          <button onClick={() => scrollToSection('how-it-works')} className="text-white hover:text-cyan-400 transition-colors">
-            How It Works
-          </button>
-          <button onClick={() => scrollToSection('threat-intelligence')} className="text-white hover:text-cyan-400 transition-colors flex items-center gap-1.5 group">
-            <Radio size={13} className="text-white group-hover:text-cyan-400 transition-colors" />
-            Threat Intelligence
-          </button>
-          <button onClick={() => scrollToSection('about')} className="text-white hover:text-cyan-400 transition-colors">
-            About
-          </button>
+          {/* Action Buttons & Mobile Menu Toggle */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Button
+              onClick={() => {
+                setSuccess(false);
+                setCountdown(3);
+                setGeneralError(null);
+                setRegisterOpen(true);
+                setMobileNavOpen(false);
+              }}
+              size="sm"
+              variant="outline"
+              className="border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400 font-semibold px-2.5 sm:px-4 text-xs sm:text-sm h-8 sm:h-9 transition shadow-xs"
+            >
+              Register
+            </Button>
+
+            <Button
+              onClick={onGoToLogin}
+              size="sm"
+              className="bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-semibold px-3 sm:px-5 text-xs sm:text-sm h-8 sm:h-9 shadow-[0_0_15px_rgba(6,182,212,0.35)] transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]"
+            >
+              Login
+            </Button>
+
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen((prev) => !prev)}
+              className="md:hidden flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-zinc-900 text-zinc-300 hover:text-white hover:bg-zinc-800 transition"
+              aria-label="Toggle navigation menu"
+              aria-expanded={mobileNavOpen}
+            >
+              {mobileNavOpen ? <X size={17} /> : <Menu size={17} />}
+            </button>
+          </div>
         </div>
 
-        {/* Top-Right Action Buttons: Register | Login */}
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={() => {
-              setSuccess(false);
-              setCountdown(3);
-              setGeneralError(null);
-              setRegisterOpen(true);
-            }}
-            size="sm"
-            variant="outline"
-            className="border-cyan-500/40 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400 font-semibold px-4 transition shadow-xs"
-          >
-            Register
-          </Button>
-
-          <Button
-            onClick={onGoToLogin}
-            size="sm"
-            className="bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-semibold px-5 shadow-[0_0_15px_rgba(6,182,212,0.35)] transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]"
-          >
-            Login
-          </Button>
-        </div>
+        {/* Mobile Dropdown Menu Drawer */}
+        {mobileNavOpen && (
+          <div className="md:hidden border-t border-white/10 bg-zinc-950/95 px-5 py-4 backdrop-blur-xl animate-in slide-in-from-top-2 duration-200">
+            <div className="flex flex-col space-y-3 text-sm font-medium text-zinc-200">
+              <button
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setMobileNavOpen(false);
+                }}
+                className="text-left py-1.5 hover:text-cyan-400 transition"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => {
+                  scrollToSection('features');
+                  setMobileNavOpen(false);
+                }}
+                className="text-left py-1.5 hover:text-cyan-400 transition"
+              >
+                Features
+              </button>
+              <button
+                onClick={() => {
+                  scrollToSection('how-it-works');
+                  setMobileNavOpen(false);
+                }}
+                className="text-left py-1.5 hover:text-cyan-400 transition"
+              >
+                How It Works
+              </button>
+              <button
+                onClick={() => {
+                  scrollToSection('threat-intelligence');
+                  setMobileNavOpen(false);
+                }}
+                className="flex items-center gap-2 text-left py-1.5 hover:text-cyan-400 transition"
+              >
+                <Radio size={14} className="text-cyan-400" />
+                Threat Intelligence
+              </button>
+              <button
+                onClick={() => {
+                  scrollToSection('about');
+                  setMobileNavOpen(false);
+                }}
+                className="text-left py-1.5 hover:text-cyan-400 transition"
+              >
+                About
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ═══════════════════════════════ 2. UPPER-CENTERED HERO SECTION ═══════════════════════════════ */}
-      <section className="relative z-10 mx-auto max-w-5xl px-6 sm:px-10 lg:px-12 pt-8 sm:pt-10 lg:pt-12 pb-12 lg:pb-14 text-center">
-        <div className="flex flex-col items-center mx-auto space-y-5">
+      <section className="relative z-10 mx-auto max-w-5xl px-4 sm:px-8 lg:px-12 pt-6 sm:pt-10 lg:pt-12 pb-10 sm:pb-12 lg:pb-14 text-center">
+        <div className="flex flex-col items-center mx-auto space-y-4 sm:space-y-5">
 
-          {/* Main Heading (Upper Centered) */}
-          <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-[3.75rem] font-extrabold tracking-tight text-zinc-50 leading-[1.12] max-w-3xl">
+          {/* Main Heading (Upper Centered, Responsive) */}
+          <h1 className="text-3xl sm:text-5xl lg:text-[3.5rem] xl:text-[3.75rem] font-extrabold tracking-tight text-zinc-50 leading-[1.15] max-w-3xl">
             Your Digital Shield Against{' '}
-            <span className="block mt-2 bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(6,182,212,0.35)]">
+            <span className="block mt-1 sm:mt-2 bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(6,182,212,0.35)]">
               Cyber Threats
             </span>
           </h1>
 
           {/* Live Security Threat Intel Chip (Positioned Below Main Heading) */}
-          <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-cyan-400 shadow-sm">
+          <div className="max-w-full inline-flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 sm:px-4 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-cyan-400 shadow-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
             </span>
             <span>AI Threat Intel v2.4</span>
-            <span className="text-zinc-500 font-mono">|</span>
-            <span className="text-zinc-300 normal-case font-normal text-[11px]">Real-Time Security Active</span>
+            <span className="hidden sm:inline text-zinc-500 font-mono">|</span>
+            <span className="text-zinc-300 normal-case font-normal text-[10px] sm:text-[11px]">Real-Time Security Active</span>
           </div>
 
           {/* Supporting Copy (Centered) */}
-          <p className="text-base sm:text-lg text-zinc-300/90 leading-relaxed max-w-2xl mx-auto pt-1">
+          <p className="text-sm sm:text-lg text-zinc-300/90 leading-relaxed max-w-2xl mx-auto pt-1 px-1">
             CyberRaksha uses intelligent AI-powered analysis to help detect suspicious links, QR codes, messages, images, and digital threats before they can harm you.
           </p>
 
           {/* Supporting Cybersecurity Signals (Centered 4-column Grid) */}
-          <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3.5 max-w-3xl w-full text-left">
-            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3 backdrop-blur-sm shadow-sm transition hover:border-cyan-500/30">
+          <div className="pt-3 sm:pt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5 max-w-3xl w-full text-left">
+            <div className="flex items-center gap-2 sm:gap-2.5 rounded-xl sm:rounded-2xl border border-white/10 bg-zinc-900/70 p-2.5 sm:p-3 backdrop-blur-sm shadow-sm transition hover:border-cyan-500/30">
               <ShieldCheck size={18} className="text-cyan-400 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
                 <div className="text-xs font-semibold text-zinc-200 truncate">Zero-Day Shield</div>
@@ -463,7 +533,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3 backdrop-blur-sm shadow-sm transition hover:border-teal-500/30">
+            <div className="flex items-center gap-2 sm:gap-2.5 rounded-xl sm:rounded-2xl border border-white/10 bg-zinc-900/70 p-2.5 sm:p-3 backdrop-blur-sm shadow-sm transition hover:border-teal-500/30">
               <Lock size={18} className="text-teal-400 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
                 <div className="text-xs font-semibold text-zinc-200 truncate">Zero-Log Privacy</div>
@@ -471,7 +541,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3 backdrop-blur-sm shadow-sm transition hover:border-blue-500/30">
+            <div className="flex items-center gap-2 sm:gap-2.5 rounded-xl sm:rounded-2xl border border-white/10 bg-zinc-900/70 p-2.5 sm:p-3 backdrop-blur-sm shadow-sm transition hover:border-blue-500/30">
               <Activity size={18} className="text-blue-400 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
                 <div className="text-xs font-semibold text-zinc-200 truncate">Multi-Format</div>
@@ -479,7 +549,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-zinc-900/70 p-3 backdrop-blur-sm shadow-sm transition hover:border-purple-500/30">
+            <div className="flex items-center gap-2 sm:gap-2.5 rounded-xl sm:rounded-2xl border border-white/10 bg-zinc-900/70 p-2.5 sm:p-3 backdrop-blur-sm shadow-sm transition hover:border-purple-500/30">
               <Zap size={18} className="text-purple-400 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
                 <div className="text-xs font-semibold text-zinc-200 truncate">Instant Rating</div>
@@ -494,32 +564,32 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
       {/* ═══════════════════════════════ REGISTRATION POPUP / MODAL ═══════════════════════════════ */}
       {registerOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
           onClick={() => setRegisterOpen(false)}
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-reg-title"
         >
           <div
-            className="relative w-full max-w-md rounded-3xl border border-white/15 bg-zinc-900/95 p-6 sm:p-7 backdrop-blur-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] max-h-[90vh] overflow-y-auto custom-scrollbar"
+            className="relative w-full max-w-[94vw] sm:max-w-md rounded-2xl sm:rounded-3xl border border-white/15 bg-zinc-900/95 p-4 sm:p-7 backdrop-blur-2xl shadow-[0_25px_70px_rgba(0,0,0,0.8)] max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto custom-scrollbar"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={() => setRegisterOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition"
+              className="absolute top-3.5 right-3.5 sm:top-4 sm:right-4 p-1.5 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition"
               aria-label="Close registration popup"
             >
               <X size={18} />
             </button>
 
             {/* Modal Header */}
-            <div className="mb-5 text-left pr-6">
-              <div className="flex items-center justify-between">
-                <h2 id="modal-reg-title" className="text-lg sm:text-xl font-bold text-zinc-100">
+            <div className="mb-3.5 sm:mb-5 text-left pr-8">
+              <div className="flex flex-wrap items-center justify-between gap-1.5">
+                <h2 id="modal-reg-title" className="text-base sm:text-xl font-bold text-zinc-100 leading-tight">
                   Create Your Secure Account
                 </h2>
-                <span className="rounded-full bg-cyan-500/15 border border-cyan-500/30 px-2.5 py-0.5 text-[10px] font-bold text-cyan-400 tracking-wide">
+                <span className="rounded-full bg-cyan-500/15 border border-cyan-500/30 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-cyan-400 tracking-wide shrink-0">
                   FREE ACCESS
                 </span>
               </div>
@@ -529,14 +599,14 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
             </div>
 
             {generalError && (
-              <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-400 text-left" role="alert">
+              <div className="mb-3 sm:mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-2.5 sm:p-3 text-xs text-red-400 text-left leading-relaxed" role="alert">
                 {generalError}
               </div>
             )}
 
             {success ? (
-              <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-8 text-center animate-in fade-in zoom-in duration-300" aria-live="polite">
-                <CheckCircle2 size={44} className="mx-auto mb-3 text-cyan-400" aria-hidden="true" />
+              <div className="rounded-2xl border border-cyan-500/30 bg-cyan-500/10 p-6 sm:p-8 text-center animate-in fade-in zoom-in duration-300" aria-live="polite">
+                <CheckCircle2 size={40} className="mx-auto mb-3 text-cyan-400 sm:w-11 sm:h-11" aria-hidden="true" />
                 <h3 className="text-base font-bold text-zinc-100">Registration successful!</h3>
                 <p className="mt-2 text-xs text-zinc-300">
                   Welcome, <span className="font-semibold text-cyan-400">{fullName}</span>. Your account is secured.
@@ -553,13 +623,13 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
                     });
                   }}
                   size="sm"
-                  className="mt-5 w-full bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-semibold gap-2"
+                  className="mt-4 sm:mt-5 w-full bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-semibold gap-2 h-10 sm:h-11"
                 >
                   Proceed to Login <ArrowRight size={14} aria-hidden="true" />
                 </Button>
               </div>
             ) : (
-              <form onSubmit={handleRegister} className="space-y-3 text-left" noValidate>
+              <form onSubmit={handleRegister} className="space-y-2.5 sm:space-y-3 text-left" noValidate>
                 {/* Full Name */}
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-zinc-300" htmlFor="modal-reg-fullname">
@@ -576,7 +646,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
                         setFullName(e.target.value);
                         setErrors((prev) => ({ ...prev, fullName: '' }));
                       }}
-                      className="pl-9 bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
+                      className="pl-9 h-10 sm:h-11 text-sm bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
                       autoComplete="name"
                     />
                   </div>
@@ -599,7 +669,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
                         setEmail(e.target.value);
                         setErrors((prev) => ({ ...prev, email: '' }));
                       }}
-                      className="pl-9 bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
+                      className="pl-9 h-10 sm:h-11 text-sm bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
                       autoComplete="email"
                     />
                   </div>
@@ -622,7 +692,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
                         setUsername(e.target.value);
                         setErrors((prev) => ({ ...prev, username: '' }));
                       }}
-                      className="pl-9 bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
+                      className="pl-9 h-10 sm:h-11 text-sm bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
                       autoComplete="username"
                     />
                   </div>
@@ -645,7 +715,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
                         setPassword(e.target.value);
                         setErrors((prev) => ({ ...prev, password: '' }));
                       }}
-                      className="pl-9 pr-9 bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
+                      className="pl-9 pr-9 h-10 sm:h-11 text-sm bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
                       autoComplete="new-password"
                     />
                     <button
@@ -677,7 +747,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
                         setConfirmPassword(e.target.value);
                         setErrors((prev) => ({ ...prev, confirmPassword: '' }));
                       }}
-                      className="pl-9 pr-9 bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
+                      className="pl-9 pr-9 h-10 sm:h-11 text-sm bg-zinc-950/80 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus:border-cyan-500"
                       autoComplete="new-password"
                     />
                     <button
@@ -696,13 +766,13 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-2.5 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
+                  className="w-full mt-2 sm:mt-2.5 h-11 bg-cyan-500 hover:bg-cyan-400 text-zinc-950 font-bold gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
                 >
                   {loading ? 'Creating Account...' : 'Register'}
                   {!loading && <ArrowRight size={15} aria-hidden="true" />}
                 </Button>
 
-                <p className="pt-1.5 text-center text-xs text-zinc-400">
+                <p className="pt-1 text-center text-xs text-zinc-400">
                   Already have an account?{' '}
                   <button
                     type="button"

@@ -1400,13 +1400,13 @@ export default function HomePage() {
 
             <h1
               className="
-                text-[40px]
+                text-[28px]
                 font-extrabold
-                tracking-[-1.5px]
+                tracking-tight
 
                 text-white
 
-                sm:text-[48px]
+                sm:text-[44px]
                 lg:text-[54px]
               "
             >
@@ -1430,7 +1430,7 @@ export default function HomePage() {
               className="
                 mt-2
 
-                text-[14px]
+                text-[13px]
                 text-slate-300
 
                 sm:text-[16px]
@@ -1448,13 +1448,15 @@ export default function HomePage() {
           <div
             className="
               mx-auto
-              mt-7
+              mt-6
+              sm:mt-7
 
               grid
               max-w-[1180px]
 
               grid-cols-2
-              gap-3
+              gap-2.5
+              sm:gap-3
 
               sm:grid-cols-3
               lg:grid-cols-5
@@ -1485,13 +1487,16 @@ export default function HomePage() {
                       group
                       relative
 
-                      min-h-[145px]
+                      min-h-[120px]
+                      sm:min-h-[145px]
 
-                      rounded-[15px]
+                      rounded-[14px]
+                      sm:rounded-[15px]
 
                       border
 
-                      p-3.5
+                      p-2.5
+                      sm:p-3.5
 
                       text-center
 
@@ -1515,8 +1520,10 @@ export default function HomePage() {
                         mx-auto
 
                         flex
-                        h-[44px]
-                        w-[44px]
+                        h-[38px]
+                        w-[38px]
+                        sm:h-[44px]
+                        sm:w-[44px]
 
                         items-center
                         justify-center
@@ -1529,9 +1536,9 @@ export default function HomePage() {
                       `}
                     >
                       <Icon
-                        size={21}
+                        size={19}
                         strokeWidth={2}
-                        className="text-white"
+                        className="text-white sm:w-[21px] sm:h-[21px]"
                       />
                     </div>
 
@@ -1539,9 +1546,11 @@ export default function HomePage() {
 
                     <h2
                       className="
-                        mt-3
+                        mt-2
+                        sm:mt-3
 
-                        text-[15px]
+                        text-[13px]
+                        sm:text-[15px]
                         font-semibold
 
                         text-white
@@ -1560,8 +1569,10 @@ export default function HomePage() {
 
                         whitespace-pre-line
 
-                        text-[11px]
-                        leading-4
+                        text-[10px]
+                        sm:text-[11px]
+                        leading-3.5
+                        sm:leading-4
 
                         text-slate-400
                       "

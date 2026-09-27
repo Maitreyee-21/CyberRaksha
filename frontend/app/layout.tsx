@@ -1,6 +1,14 @@
+import type { Viewport } from 'next';
 import './globals.css';
 
 import { LanguageProvider } from '@/components/providers/LanguageProvider';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#070B0F',
+};
 
 export const metadata = {
   title:
@@ -16,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-[#070B0F] text-white antialiased">
+      <body className="bg-[#070B0F] text-white antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
         <LanguageProvider>
           {children}
         </LanguageProvider>

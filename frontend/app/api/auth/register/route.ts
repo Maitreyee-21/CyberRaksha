@@ -156,8 +156,11 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
+    const errorMessage = typeof err?.message === 'string' && err.message.length > 0 && !err.message.includes('EROFS')
+      ? err.message
+      : 'An internal server error occurred. Please try again.';
     return NextResponse.json(
-      { ok: false, error: 'An internal server error occurred. Please try again.' },
+      { ok: false, error: errorMessage },
       { status: 500 }
     );
   }

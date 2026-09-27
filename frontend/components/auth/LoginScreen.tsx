@@ -103,12 +103,12 @@ export function LoginScreen({
       </div>
 
       {/* Top Navigation Bar with clearly visible Home Button */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between border-b border-white/10 bg-zinc-950/80 px-6 sm:px-12 py-3.5 backdrop-blur-md">
+      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between border-b border-white/10 bg-zinc-950/80 px-4 sm:px-12 py-3 sm:py-3.5 backdrop-blur-md">
         <div className="flex items-center gap-3">
           {onGoToHome ? (
             <button
               onClick={onGoToHome}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-900/80 px-3.5 py-1.5 text-xs font-semibold text-zinc-300 hover:border-cyan-500/40 hover:bg-zinc-800 hover:text-cyan-400 transition shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-900/80 px-3 sm:px-3.5 py-1.5 text-xs font-semibold text-zinc-300 hover:border-cyan-500/40 hover:bg-zinc-800 hover:text-cyan-400 transition shadow-sm"
               title="Return to Homepage"
             >
               <ArrowLeft size={14} />
@@ -117,7 +117,7 @@ export function LoginScreen({
           ) : (
             <a
               href="/"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-900/80 px-3.5 py-1.5 text-xs font-semibold text-zinc-300 hover:border-cyan-500/40 hover:bg-zinc-800 hover:text-cyan-400 transition shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-900/80 px-3 sm:px-3.5 py-1.5 text-xs font-semibold text-zinc-300 hover:border-cyan-500/40 hover:bg-zinc-800 hover:text-cyan-400 transition shadow-sm"
             >
               <ArrowLeft size={14} />
               <span>Home</span>
@@ -136,13 +136,13 @@ export function LoginScreen({
       </header>
 
       {/* Login Card Container */}
-      <div className="relative z-10 w-full max-w-md pt-12">
+      <div className="relative z-10 w-full max-w-md pt-10 sm:pt-12">
         {/* Header */}
-        <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-cyan-500/15 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]">
-            <KeyRound size={26} />
+        <div className="mb-5 sm:mb-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-cyan-500/15 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.25)]">
+            <KeyRound size={24} className="sm:w-6 sm:h-6" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-100">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-100">
             Welcome Back to CyberRaksha
           </h1>
           <p className="mt-1.5 text-xs text-zinc-400">
@@ -151,8 +151,8 @@ export function LoginScreen({
         </div>
 
         {/* Card */}
-        <div className="rounded-3xl border border-white/10 bg-zinc-900/80 p-7 sm:p-8 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-zinc-900/80 p-5 sm:p-8 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+          <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4" noValidate>
             {/* Email or Username */}
             <div className="space-y-1.5 text-left">
               <label className="text-xs font-medium text-zinc-300" htmlFor="login-identifier">
