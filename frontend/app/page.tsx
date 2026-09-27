@@ -1677,7 +1677,8 @@ export default function HomePage() {
                     }
                     readOnly={
                       selectedType === 'qr' ||
-                      selectedType === 'image'
+                      selectedType === 'image' ||
+                      selectedType === 'document'
                     }
                     onChange={(e) => {
                       setText(e.target.value);
@@ -1698,9 +1699,13 @@ export default function HomePage() {
                     placeholder={
                       selectedType === 'url'
                         ? homeText.urlPlaceholder
-                        : selectedType === 'qr' || selectedType === 'image'
-                          ? homeText.imageRequired
-                          : homeText.textPlaceholder
+                        : selectedType === 'qr'
+                          ? (selectedFile ? selectedFile.name : (language === 'hi' ? 'क्यूआर कोड छवि चुनें...' : language === 'mr' ? 'QR कोड प्रतिमा निवडा...' : 'Upload or choose a QR code image to scan...'))
+                          : selectedType === 'image'
+                            ? (selectedFile ? selectedFile.name : (language === 'hi' ? 'स्क्रीनशॉट या छवि चुनें...' : language === 'mr' ? 'स्क्रीनशॉट किंवा प्रतिमा निवडा...' : 'Upload or choose a screenshot to scan...'))
+                            : selectedType === 'document'
+                              ? (selectedFile ? selectedFile.name : (language === 'hi' ? 'जाँच के लिए दस्तावेज़ चुनें (PDF, DOCX, TXT)...' : language === 'mr' ? 'दस्तऐवज निवडा (PDF, DOCX, TXT)...' : 'Upload or choose a document to check (PDF, TXT, DOCX)...'))
+                              : homeText.textPlaceholder
                     }
                     className="
                       h-[40px]
@@ -1724,12 +1729,17 @@ export default function HomePage() {
                 </div>
 
                 {(selectedType === 'qr' ||
-                  selectedType === 'image') && (
+                  selectedType === 'image' ||
+                  selectedType === 'document') && (
                   <button
                     type="button"
                     onClick={() => {
                       if (fileInputRef.current) {
-                        fileInputRef.current.accept = 'image/*';
+                        if (selectedType === 'document') {
+                          fileInputRef.current.accept = '.pdf,.doc,.docx,.txt,.rtf,.odt,.csv,.log,text/*,application/pdf';
+                        } else {
+                          fileInputRef.current.accept = 'image/*,image/png,image/jpeg,image/webp';
+                        }
                         fileInputRef.current.click();
                       }
                     }}

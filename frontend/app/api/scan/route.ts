@@ -18,8 +18,11 @@ export async function POST(req: NextRequest) {
       if (backendRes.ok) {
         const backendData = await backendRes.json();
         return NextResponse.json(backendData, { status: 200 });
+      } else if (backendRes.status === 400) {
+        const errJson = await backendRes.json().catch(() => ({ detail: 'Invalid request' }));
+        return NextResponse.json(errJson, { status: 400 });
       }
-    } catch (backendErr) {
+    } catch {
       // Backend not running or unreachable — continue to internal fallback
     }
 

@@ -87,6 +87,14 @@
       "username": "user_11",
       "passwordHash": "$2b$10$AU/2cYwjnkz30XW0lxeaD.fJVni6iLxN4QagLM4O4beZTcv0ZIyXS",
       "createdAt": "2026-09-12T16:24:07.148Z"
+    },
+    {
+      "id": "usr_1790500987403_zdpi0mh",
+      "fullName": "User",
+      "email": "user21@gmail.com",
+      "username": "user_21",
+      "passwordHash": "$2b$10$B/OjUHB8VcmpKyS46L0D6eSyqEn30K5iZ9ZZOqHM8UbyisUNKwbrm",
+      "createdAt": "2026-09-27T09:23:07.403Z"
     }
   ]
 }

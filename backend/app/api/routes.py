@@ -8,6 +8,7 @@ from app.core.schemas import (
     ScanRequest,
     ScanResult,
     RiskLevel,
+    InputType,
     SecurityURLRequest,
     QRPayloadRequest,
 )
@@ -86,8 +87,78 @@ async def _run_pipeline(body: Dict[str, Any]) -> ScanResult:
         if not normalized_text and not detected_urls and not qr_payload:
             raise HTTPException(
                 status_code=400,
-                detail="No analysable content provided.",
+                detail="No analysable content provided. Please upload or enter valid content to scan.",
             )
+
+        # Handle QR scans where no valid QR code could be decoded from the image
+        if input_type == InputType.QR and not qr_payload:
+            user_ctx = (body.get("text_content") or "").strip()
+            if not user_ctx:
+                from app.core.schemas import (
+                    ScamDNA,
+                    ScamClassification,
+                    ScamFingerprint,
+                    VariantDetection,
+                    MultilingualGuidance,
+                    GuidanceItem,
+                )
+                return ScanResult(
+                    risk_level=RiskLevel.LOW,
+                    risk_score=0,
+                    scam_category="Invalid QR Code / No QR Detected",
+                    summary="Invalid QR Code: No readable QR code could be detected in this image. Please upload a clear image containing a valid QR code.",
+                    red_flags=[
+                        "No valid QR code pattern was found in the uploaded image",
+                        "The image may be blurred, cropped, low-contrast, or not a QR code image",
+                    ],
+                    scam_dna=ScamDNA(urgency=0, fear=0, impersonation=0, suspicious_link=0, payment_pressure=0),
+                    scam_classification=ScamClassification(
+                        category="Invalid QR Code",
+                        confidence=95,
+                        explanation="No decodable QR matrix found in visual payload.",
+                    ),
+                    scam_fingerprint=ScamFingerprint(
+                        name="Invalid Visual Matrix",
+                        description="The image provided does not contain a recognizable QR barcode.",
+                        confidence=95,
+                    ),
+                    variant_detection=VariantDetection(
+                        detected=False,
+                        match_type="none",
+                        explanation="No QR payload available for threat comparison.",
+                    ),
+                    emergency_alert=False,
+                    safety_lock=False,
+                    detected_urls=[],
+                    qr_payload=None,
+                    guidance=MultilingualGuidance(
+                        en=GuidanceItem(
+                            title="Invalid QR Code Guidance",
+                            steps=[
+                                "Ensure the entire QR code is visible inside the frame.",
+                                "Make sure the image is well-lit and in sharp focus.",
+                                "Check that the uploaded file is in a supported image format (PNG, JPG, WEBP).",
+                            ],
+                        ),
+                        hi=GuidanceItem(
+                            title="अमान्य क्यूआर कोड निर्देश",
+                            steps=[
+                                "सुनिश्चित करें कि पूरा क्यूआर कोड स्पष्ट रूप से दिखाई दे रहा है।",
+                                "छवि धुंधली या कटी हुई नहीं होनी चाहिए।",
+                                "केवल मान्य क्यूआर कोड वाली छवि ही अपलोड करें।",
+                            ],
+                        ),
+                        mr=GuidanceItem(
+                            title="अवैध क्यूआर कोड मार्गदर्शन",
+                            steps=[
+                                "संपूर्ण क्यूआर कोड स्पष्ट दिसत असल्याची खात्री करा.",
+                                "प्रतिमा अंधुक किंवा कापलेली नसावी.",
+                            ],
+                        ),
+                    ),
+                    input_type_used="qr",
+                    api_mode="validation_check",
+                )
 
         layer1 = heuristic_layer1_check(normalized_text)
 

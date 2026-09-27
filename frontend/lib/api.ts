@@ -23,13 +23,38 @@ export async function runTextScan(
   );
 }
 
+async function extractErrorMessage(resp: Response): Promise<string> {
+  try {
+    const raw = await resp.text();
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed.detail || parsed.error || parsed.message || raw;
+    } catch {
+      return raw;
+    }
+  } catch {
+    return `Request failed with status ${resp.status}`;
+  }
+}
+
 export async function runUrlScan(
   url: string,
   language: Language = 'en'
 ): Promise<ScanResult> {
-  const normalizedUrl = url.trim().startsWith('http://') || url.trim().startsWith('https://')
-    ? url.trim()
-    : `https://${url.trim()}`;
+  const trimmed = url.trim();
+  if (!trimmed) {
+    throw new Error('Please enter a website link or URL to check.');
+  }
+
+  // Basic check for valid URL or domain
+  const hasDomain = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/.*)?$/i.test(trimmed) || /^https?:\/\/.+/i.test(trimmed);
+  if (!hasDomain) {
+    throw new Error('Invalid URL format. Please enter a valid web link or domain (e.g., https://example.com or verify-portal.xyz).');
+  }
+
+  const normalizedUrl = trimmed.startsWith('http://') || trimmed.startsWith('https://')
+    ? trimmed
+    : `https://${trimmed}`;
 
   return submitScan(
     {
@@ -45,6 +70,13 @@ export async function runImageScan(
   mode: 'image' | 'qr',
   language: Language = 'en'
 ): Promise<ScanResult> {
+  if (!file) {
+    throw new Error(mode === 'qr' ? 'Please choose a QR code image to scan.' : 'Please choose an image or screenshot to scan.');
+  }
+  if (file.size === 0) {
+    throw new Error('The selected image is empty (0 bytes). Please upload a valid image file.');
+  }
+
   const fd = new FormData();
 
   fd.append('input_type', mode);
@@ -57,7 +89,7 @@ export async function runImageScan(
   });
 
   if (!resp.ok) {
-    throw new Error(await resp.text());
+    throw new Error(await extractErrorMessage(resp));
   }
 
   return (await resp.json()) as ScanResult;
@@ -67,6 +99,13 @@ export async function runDocumentScan(
   file: File,
   language: Language = 'en'
 ): Promise<ScanResult> {
+  if (!file) {
+    throw new Error('Please choose a document to check.');
+  }
+  if (file.size === 0) {
+    throw new Error('The selected document is empty (0 bytes). Please upload a valid document.');
+  }
+
   // If file is plain text, markdown, csv, or json, extract text client-side
   const ext = file.name.split('.').pop()?.toLowerCase() || '';
   const isTextLike = ['txt', 'md', 'csv', 'json', 'log', 'rtf', 'html', 'htm'].includes(ext) || file.type.startsWith('text/');
@@ -74,6 +113,9 @@ export async function runDocumentScan(
   if (isTextLike) {
     try {
       const textContent = await file.text();
+      if (!textContent.trim()) {
+        throw new Error('The document contains no readable text. Please upload a valid document.');
+      }
       return submitScan(
         {
           input_type: 'document',
@@ -81,7 +123,8 @@ export async function runDocumentScan(
         },
         language
       );
-    } catch {
+    } catch (err: any) {
+      if (err?.message?.includes('no readable text') || err?.message?.includes('empty')) throw err;
       // Fall through to multipart form upload
     }
   }
@@ -99,7 +142,7 @@ export async function runDocumentScan(
   });
 
   if (!resp.ok) {
-    throw new Error(await resp.text());
+    throw new Error(await extractErrorMessage(resp));
   }
 
   return (await resp.json()) as ScanResult;
@@ -119,9 +162,7 @@ async function submitScan(
   });
 
   if (!resp.ok) {
-    throw new Error(
-      `HTTP ${resp.status}: ${await resp.text()}`
-    );
+    throw new Error(await extractErrorMessage(resp));
   }
 
   return (await resp.json()) as ScanResult;

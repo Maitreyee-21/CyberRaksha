@@ -388,29 +388,43 @@ export default function ResultsPanel({ result, loading, error, onReset }: Result
         ? 'caution'
         : 'safe';
 
-  const stateData = {
-    safe: {
-      title: t.safeTitle,
-      message: t.safeMessage,
-      quote: t.safeQuote,
-      icon: CheckCircle2,
-      accent: 'emerald',
-    },
-    caution: {
-      title: t.cautionTitle,
-      message: t.cautionMessage,
-      quote: t.cautionQuote,
-      icon: TriangleAlert,
-      accent: 'amber',
-    },
-    unsafe: {
-      title: t.unsafeTitle,
-      message: t.unsafeMessage,
-      quote: t.unsafeQuote,
-      icon: CircleX,
-      accent: 'rose',
-    },
-  }[state];
+  const isInvalidQr =
+    result.scam_category.toLowerCase().includes('invalid qr') ||
+    result.scam_category.toLowerCase().includes('no qr');
+
+  const stateData = isInvalidQr
+    ? {
+        title: 'Invalid QR Image',
+        message:
+          result.summary ||
+          'No readable QR code could be detected in this image. Please upload a clear image containing a valid QR code.',
+        quote: '“Make sure the QR code is clearly visible, well-lit, and in focus.”',
+        icon: TriangleAlert,
+        accent: 'amber' as const,
+      }
+    : {
+        safe: {
+          title: t.safeTitle,
+          message: t.safeMessage,
+          quote: t.safeQuote,
+          icon: CheckCircle2,
+          accent: 'emerald' as const,
+        },
+        caution: {
+          title: t.cautionTitle,
+          message: t.cautionMessage,
+          quote: t.cautionQuote,
+          icon: TriangleAlert,
+          accent: 'amber' as const,
+        },
+        unsafe: {
+          title: t.unsafeTitle,
+          message: t.unsafeMessage,
+          quote: t.unsafeQuote,
+          icon: CircleX,
+          accent: 'rose' as const,
+        },
+      }[state];
 
   const shareResult = async () => {
     const text = `CyberRaksha result: ${stateData.title} — ${score}/100`;
@@ -510,7 +524,22 @@ export default function ResultsPanel({ result, loading, error, onReset }: Result
 
             {/* SAFE / WARNING CHECKS */}
             <div className="mx-auto mt-7 max-w-[680px]">
-              {state === 'safe' ? (
+              {isInvalidQr ? (
+                <div className="space-y-2 rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] p-4">
+                  {(result.red_flags?.length ? result.red_flags : [
+                    'No readable QR code pattern detected in the uploaded image',
+                    'Image may be blurry, cropped, low-contrast, or corrupted',
+                    'Ensure the QR code matrix is clearly framed and well-lit',
+                  ]).map((flag, index) => (
+                    <div key={`${flag}-${index}`} className="flex items-start gap-3 text-sm text-slate-200">
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-400/15 text-amber-300">
+                        <AlertTriangle size={15} />
+                      </span>
+                      <span className="leading-6">{flag}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : state === 'safe' ? (
                 <div className="space-y-2 rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.07] p-4">
                   {t.safeChecks.map((item) => (
                     <div key={item} className="flex items-center gap-3 text-sm text-slate-200">
@@ -540,12 +569,19 @@ export default function ResultsPanel({ result, loading, error, onReset }: Result
             </div>
 
             {/* ACTION CARD */}
-            <div className={`mx-auto mt-4 max-w-[680px] rounded-2xl border p-4 ${state === 'unsafe' ? 'border-rose-300/30 bg-rose-100 text-rose-950' : state === 'caution' ? 'border-amber-300/30 bg-amber-100 text-amber-950' : 'border-emerald-300/30 bg-emerald-100 text-emerald-950'}`}>
+            <div className={`mx-auto mt-4 max-w-[680px] rounded-2xl border p-4 ${isInvalidQr ? 'border-amber-300/30 bg-amber-100 text-amber-950' : state === 'unsafe' ? 'border-rose-300/30 bg-rose-100 text-rose-950' : state === 'caution' ? 'border-amber-300/30 bg-amber-100 text-amber-950' : 'border-emerald-300/30 bg-emerald-100 text-emerald-950'}`}>
               <div className="flex gap-3">
                 <Lightbulb className="mt-0.5 shrink-0" size={23} />
                 <div>
-                  <h3 className="font-bold">{t.whatToDo}</h3>
-                  {state === 'safe' ? (
+                  <h3 className="font-bold">{isInvalidQr ? 'What You Should Do' : t.whatToDo}</h3>
+                  {isInvalidQr ? (
+                    <ul className="mt-2 space-y-1 text-sm">
+                      <li>✓ Capture or crop directly around the QR code pattern</li>
+                      <li>✓ Avoid camera glare, motion blur, or severe angles</li>
+                      <li>✓ Supported formats: PNG, JPG, JPEG, WEBP</li>
+                      <li>✓ If you have the link text directly, scan using the URL tab</li>
+                    </ul>
+                  ) : state === 'safe' ? (
                     <p className="mt-1 text-sm leading-6">{t.safeAction}<br />{t.cautionAction}</p>
                   ) : state === 'caution' ? (
                     <ul className="mt-2 space-y-1 text-sm">

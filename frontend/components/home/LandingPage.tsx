@@ -25,10 +25,18 @@ import {
   Zap,
   Activity,
   X,
+  BookOpen,
+  ExternalLink,
+  RefreshCw,
+  FileText,
+  PhoneCall,
+  Radio,
+  Share2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import type { CyberArticle } from '@/app/api/cyber-news/route';
 
 interface LandingPageProps {
   onGoToLogin: () => void;
@@ -83,22 +91,22 @@ const FEATURES = [
 
 const HOW_IT_WORKS_STEPS = [
   {
-    step: '01',
     title: 'Upload or Paste',
     description: 'Paste a URL, upload a QR code, image, or suspicious content.',
     icon: UploadCloud,
+    tag: 'Input Intake',
   },
   {
-    step: '02',
     title: 'AI Security Analysis',
     description: 'CyberRaksha intelligently analyzes multiple threat indicators.',
     icon: Search,
+    tag: 'Granite AI Defense',
   },
   {
-    step: '03',
     title: 'Get Protection Insights',
     description: 'Receive a risk score, threat explanation, and safety recommendations.',
     icon: ShieldCheck,
+    tag: 'Actionable Shield',
   },
 ];
 
@@ -157,6 +165,36 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [success, countdown, onRegistered, email, username, password]);
+
+  // Cyber News / Latest Articles state
+  const [articles, setArticles] = React.useState<CyberArticle[]>([]);
+  const [newsLoading, setNewsLoading] = React.useState(true);
+  const [newsCategory, setNewsCategory] = React.useState<string>('All');
+  const [searchQuery, setSearchQuery] = React.useState<string>('');
+  const [selectedArticle, setSelectedArticle] = React.useState<CyberArticle | null>(null);
+  const [lastRefreshed, setLastRefreshed] = React.useState<string>('Just now');
+
+  const fetchNews = React.useCallback(async () => {
+    setNewsLoading(true);
+    try {
+      const res = await fetch('/api/cyber-news');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.articles) && data.articles.length > 0) {
+          setArticles(data.articles);
+          setLastRefreshed(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        }
+      }
+    } catch {
+      // Keep existing or fallback
+    } finally {
+      setNewsLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchNews();
+  }, [fetchNews]);
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
@@ -673,18 +711,19 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left relative">
-            {HOW_IT_WORKS_STEPS.map(({ step, title, description, icon: Icon }) => (
+            {HOW_IT_WORKS_STEPS.map(({ title, description, icon: Icon, tag }) => (
               <div
-                key={step}
+                key={title}
                 className="relative rounded-3xl border border-white/10 bg-zinc-900/50 p-8 backdrop-blur-sm transition-all hover:border-cyan-500/30"
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
                     <Icon size={22} aria-hidden="true" />
                   </div>
-                  <span className="font-mono text-3xl font-extrabold text-white/20">
-                    {step}
-                  </span>
+                  <div className="flex items-center gap-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold text-cyan-400">
+                    <ShieldCheck size={13} />
+                    <span>{tag}</span>
+                  </div>
                 </div>
                 <h3 className="text-lg font-bold text-zinc-100">{title}</h3>
                 <p className="mt-2 text-xs sm:text-sm text-zinc-400 leading-relaxed">
@@ -696,7 +735,178 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════ 5. ABOUT SECTION ═══════════════════════════════ */}
+      {/* ═══════════════════════════════ 5. LATEST ARTICLES & THREAT INTELLIGENCE ═══════════════════════════════ */}
+      <section id="articles" className="relative z-10 border-t border-white/10 bg-[#080d12] py-16 lg:py-24 px-6 sm:px-12">
+        <div className="mx-auto max-w-7xl">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-400 mb-3">
+                <Radio size={13} className="text-cyan-400 animate-pulse" />
+                Live Cyber Threat Intelligence
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                Latest Articles & Verified Advisories
+              </h2>
+              <p className="mt-2.5 max-w-2xl text-sm text-zinc-400 leading-relaxed">
+                Stay informed with genuine, up-to-date threat reports and actionable defense tactics verified by CERT-In, I4C (MHA), NPCI, and RBI.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-900/80 px-3 py-1.5 text-xs text-zinc-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                <span>Updated: <strong className="text-zinc-200">{lastRefreshed}</strong></span>
+              </div>
+              <button
+                type="button"
+                onClick={fetchNews}
+                disabled={newsLoading}
+                className="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition disabled:opacity-50"
+                title="Refresh latest cyber threat news"
+              >
+                <RefreshCw size={13} className={newsLoading ? 'animate-spin' : ''} />
+                <span>Refresh Feed</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Search & Category Filter */}
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+              <input
+                type="text"
+                placeholder="Search articles by keyword (e.g. Digital Arrest, APK, UPI, eSIM, Phishing)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-white/10 bg-zinc-900/90 pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-cyan-500/50 transition"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full custom-scrollbar">
+              {['All', 'Official Advisory', 'Payment Security', 'Malware Alert', 'Financial Fraud', 'Mobile Threat'].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setNewsCategory(cat)}
+                  className={`rounded-xl px-3 py-2 text-xs font-semibold whitespace-nowrap transition ${
+                    newsCategory === cat
+                      ? 'bg-cyan-500 text-zinc-950 font-bold shadow-sm'
+                      : 'border border-white/5 bg-zinc-900/60 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Articles Grid */}
+          {newsLoading && articles.length === 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-64 rounded-2xl border border-white/5 bg-zinc-900/40 animate-pulse p-6" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {articles
+                .filter((art) => (newsCategory === 'All' ? true : art.category === newsCategory))
+                .filter((art) => {
+                  if (!searchQuery.trim()) return true;
+                  const q = searchQuery.toLowerCase();
+                  return (
+                    art.title.toLowerCase().includes(q) ||
+                    art.summary.toLowerCase().includes(q) ||
+                    art.tags.some((t) => t.toLowerCase().includes(q))
+                  );
+                })
+                .map((art) => {
+                  const isCritical = art.severity === 'CRITICAL';
+                  const isHigh = art.severity === 'HIGH';
+
+                  return (
+                    <article
+                      key={art.id}
+                      className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-zinc-900/60 p-6 backdrop-blur-md transition-all hover:border-cyan-500/40 hover:bg-zinc-900/90 hover:shadow-xl hover:shadow-cyan-950/20"
+                    >
+                      <div>
+                        {/* Top meta */}
+                        <div className="flex items-center justify-between gap-2 mb-3 text-[11px]">
+                          <span
+                            className={`rounded-md px-2 py-0.5 font-bold uppercase tracking-wider ${
+                              isCritical
+                                ? 'bg-red-500/15 border border-red-500/30 text-red-400'
+                                : isHigh
+                                ? 'bg-amber-500/15 border border-amber-500/30 text-amber-400'
+                                : 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-400'
+                            }`}
+                          >
+                            {art.severity}
+                          </span>
+                          <span className="text-zinc-500 font-mono">{art.readTime}</span>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-base font-bold text-zinc-100 group-hover:text-cyan-300 transition leading-snug line-clamp-2">
+                          {art.title}
+                        </h3>
+
+                        {/* Source badge */}
+                        <div className="mt-2.5 flex items-center gap-1.5 text-xs text-cyan-400/90 font-medium">
+                          <ShieldCheck size={14} className="text-cyan-400 shrink-0" />
+                          <span className="truncate">{art.source}</span>
+                        </div>
+
+                        {/* Summary */}
+                        <p className="mt-3 text-xs text-zinc-400 leading-relaxed line-clamp-3">
+                          {art.summary}
+                        </p>
+
+                        {/* Key takeaway highlight box */}
+                        <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-[11px] leading-relaxed text-amber-300/90">
+                          {art.keyTakeaway}
+                        </div>
+                      </div>
+
+                      {/* Card Footer */}
+                      <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap gap-1">
+                          {art.tags.slice(0, 2).map((t) => (
+                            <span key={t} className="rounded bg-zinc-800/80 px-2 py-0.5 text-[10px] text-zinc-400">
+                              #{t}
+                            </span>
+                          ))}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setSelectedArticle(art)}
+                          className="flex items-center gap-1 text-xs font-bold text-cyan-400 hover:text-cyan-300 transition"
+                        >
+                          <span>Read Full</span>
+                          <ArrowRight size={13} />
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════ 6. ABOUT SECTION (VISION) ═══════════════════════════════ */}
       <section id="about" className="relative z-10 mx-auto max-w-5xl px-6 sm:px-12 py-16 lg:py-20 text-center">
         <div className="rounded-3xl border border-cyan-500/20 bg-gradient-to-b from-cyan-950/30 via-zinc-900/60 to-zinc-900/80 p-8 sm:p-12 backdrop-blur-md shadow-2xl">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-500/40 bg-cyan-500/15 text-cyan-400">
@@ -731,7 +941,7 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════ 6. TRUST / IMPACT SECTION ═══════════════════════════════ */}
+      {/* ═══════════════════════════════ 7. TRUST / IMPACT SECTION ═══════════════════════════════ */}
       <section className="relative z-10 border-t border-white/5 bg-zinc-900/30 py-14 px-6 sm:px-12 backdrop-blur-sm">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -751,39 +961,290 @@ export function LandingPage({ onGoToLogin, onRegistered }: LandingPageProps) {
         </div>
       </section>
 
-      {/* ═══════════════════════════════ 7. FOOTER ═══════════════════════════════ */}
-      <footer className="relative z-10 border-t border-white/10 bg-zinc-950 px-6 sm:px-12 py-10 text-zinc-400">
-        <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/15 text-cyan-400">
-              <Shield size={15} aria-hidden="true" />
+      {/* ═══════════════════════════════ 8. STANDARDIZED FOOTER WITH ABOUT & SOCIAL HANDLES ═══════════════════════════════ */}
+      <footer className="relative z-10 border-t border-white/10 bg-[#06090d] px-6 sm:px-12 pt-16 pb-12 text-zinc-400">
+        <div className="mx-auto max-w-7xl">
+          {/* Main Footer Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-white/10">
+            {/* About CyberRaksha Platform */}
+            <div className="md:col-span-5 space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-500/40 bg-cyan-500/15 text-cyan-400">
+                  <Shield size={18} aria-hidden="true" />
+                </div>
+                <span className="text-lg font-bold text-zinc-100">
+                  Cyber<span className="text-cyan-400">Raksha</span>
+                </span>
+                <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-300">
+                  AI Defense
+                </span>
+              </div>
+
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                CyberRaksha is an AI-powered public cybersecurity assistant engineered to empower citizens, small businesses, and institutions against digital deception. Designed around IBM Granite models and deterministic safety policies to detect quishing, fake UPI requests, malicious URLs, and scam messages in real time.
+              </p>
+
+              {/* Social Media Handles */}
+              <div className="pt-2">
+                <div className="text-xs font-bold text-zinc-200 uppercase tracking-wider mb-3">
+                  Connect & Follow Threat Alerts
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* Twitter / X */}
+                  <a
+                    href="https://x.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Follow CyberRaksha on X (Twitter)"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-400 transition hover:border-cyan-500/50 hover:bg-zinc-800 hover:text-white hover:scale-105"
+                  >
+                    <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  </a>
+
+                  {/* LinkedIn */}
+                  <a
+                    href="https://linkedin.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Connect with CyberRaksha on LinkedIn"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-400 transition hover:border-cyan-500/50 hover:bg-zinc-800 hover:text-white hover:scale-105"
+                  >
+                    <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9h2.79v8.37H6.46v-8.37M7.86 6.54a1.63 1.63 0 1 0 0 3.26 1.63 1.63 0 0 0 0-3.26z" />
+                    </svg>
+                  </a>
+
+                  {/* GitHub */}
+                  <a
+                    href="https://github.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="CyberRaksha GitHub Repository"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-400 transition hover:border-cyan-500/50 hover:bg-zinc-800 hover:text-white hover:scale-105"
+                  >
+                    <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z" />
+                    </svg>
+                  </a>
+
+                  {/* YouTube */}
+                  <a
+                    href="https://youtube.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="CyberRaksha YouTube Channel"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-400 transition hover:border-cyan-500/50 hover:bg-zinc-800 hover:text-white hover:scale-105"
+                  >
+                    <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                    </svg>
+                  </a>
+
+                  {/* Telegram */}
+                  <a
+                    href="https://telegram.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="CyberRaksha Alerts Telegram Channel"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-zinc-900 text-zinc-400 transition hover:border-cyan-500/50 hover:bg-zinc-800 hover:text-white hover:scale-105"
+                  >
+                    <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
             </div>
-            <span className="text-sm font-bold text-zinc-100">
-              Cyber<span className="text-cyan-400">Raksha</span>
-            </span>
-            <span className="text-xs text-zinc-500 hidden sm:inline">| Intelligent Cyber Safety Platform</span>
+
+            {/* Standardized Emergency Portals */}
+            <div className="md:col-span-4 space-y-3">
+              <div className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+                Official Helplines & Portals
+              </div>
+              <ul className="space-y-2.5 text-xs">
+                <li>
+                  <a
+                    href="https://cybercrime.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between text-zinc-400 hover:text-cyan-400 transition group"
+                  >
+                    <span>National Cyber Helpline (Toll-Free 24x7)</span>
+                    <span className="font-bold text-cyan-400 font-mono">1930</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://cybercrime.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between text-zinc-400 hover:text-cyan-400 transition"
+                  >
+                    <span>Cybercrime Reporting Portal</span>
+                    <ExternalLink size={12} className="text-zinc-500" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.cert-in.org.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between text-zinc-400 hover:text-cyan-400 transition"
+                  >
+                    <span>CERT-In National Incident Response</span>
+                    <ExternalLink size={12} className="text-zinc-500" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://sachet.rbi.org.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between text-zinc-400 hover:text-cyan-400 transition"
+                  >
+                    <span>RBI Sachet Financial Fraud Registry</span>
+                    <ExternalLink size={12} className="text-zinc-500" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://sancharsaathi.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between text-zinc-400 hover:text-cyan-400 transition"
+                  >
+                    <span>DoT Sanchar Saathi (Lost/Stolen Phones)</span>
+                    <ExternalLink size={12} className="text-zinc-500" />
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Standardized Security Standards */}
+            <div className="md:col-span-3 space-y-3">
+              <div className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
+                Security & Platform Standards
+              </div>
+              <ul className="space-y-2 text-xs text-zinc-400">
+                <li className="flex items-center gap-2">
+                  <ShieldCheck size={14} className="text-emerald-400 shrink-0" />
+                  <span>Zero-Log Ephemeral Processing</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Cpu size={14} className="text-cyan-400 shrink-0" />
+                  <span>IBM Granite 4.1 Hybrid AI Engine</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Lock size={14} className="text-amber-400 shrink-0" />
+                  <span>Deterministic URL Safety Lock</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Activity size={14} className="text-teal-400 shrink-0" />
+                  <span>22 Official Indian Languages</span>
+                </li>
+                <li className="pt-1">
+                  <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] text-emerald-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>All Systems Operational</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 text-xs font-medium">
-            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-cyan-400 transition">
-              Home
-            </button>
-            <button onClick={() => scrollToSection('features')} className="hover:text-cyan-400 transition">
-              Features
-            </button>
-            <button onClick={() => scrollToSection('about')} className="hover:text-cyan-400 transition">
-              About
-            </button>
-            <a href="#" className="hover:text-cyan-400 transition">
-              Privacy
-            </a>
+          {/* Standardized Bottom Bar */}
+          <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+            <p>
+              &copy; 2026 CyberRaksha. Built for Digital India Cyber Safety.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-5 font-medium">
+              <a href="#about" className="hover:text-cyan-400 transition">About Us</a>
+              <span>•</span>
+              <a href="#articles" className="hover:text-cyan-400 transition">Threat Intelligence</a>
+              <span>•</span>
+              <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition">Emergency 1930</a>
+              <span>•</span>
+              <span className="text-zinc-600">Privacy First &amp; Zero Retention</span>
+            </div>
           </div>
 
-          <p className="text-xs text-zinc-500">
-            &copy; 2026 CyberRaksha. Building a Safer Digital World.
-          </p>
+          {/* Legal Advisory Disclaimer */}
+          <div className="mt-6 rounded-xl border border-white/5 bg-zinc-900/30 p-3.5 text-[11px] leading-relaxed text-zinc-500 text-center">
+            Disclaimer: CyberRaksha is an AI-assisted threat detection and educational guidance system. It does not replace authorized banking verifications or official law enforcement investigations. In case of financial crime or unauthorized fund debit, report immediately to Helpline 1930 and contact your bank to freeze UPI and debit accounts.
+          </div>
         </div>
       </footer>
+
+      {/* ═══════════════════════════════ ARTICLE READER MODAL ═══════════════════════════════ */}
+      {selectedArticle && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          onClick={() => setSelectedArticle(null)}
+        >
+          <div
+            className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-white/10 bg-zinc-950 p-6 md:p-8 text-left shadow-2xl custom-scrollbar"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedArticle(null)}
+              className="absolute right-5 top-5 p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+              aria-label="Close article modal"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-2 mb-3">
+              <span className="rounded-md bg-cyan-500/15 border border-cyan-500/30 px-2 py-0.5 text-[10px] font-bold uppercase text-cyan-400">
+                {selectedArticle.category}
+              </span>
+              <span className="text-xs text-zinc-500 font-mono">• {selectedArticle.date}</span>
+            </div>
+
+            <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">
+              {selectedArticle.title}
+            </h2>
+
+            <div className="mt-3 flex items-center gap-2 text-xs text-cyan-400 font-medium">
+              <ShieldCheck size={16} />
+              <span>Verified Source: {selectedArticle.source}</span>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5 text-xs text-amber-300 font-medium leading-relaxed">
+              ⚠️ {selectedArticle.keyTakeaway}
+            </div>
+
+            <div className="mt-6 space-y-4 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              {selectedArticle.content.map((paragraph, idx) => (
+                <p key={idx}>{paragraph}</p>
+              ))}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-xs text-zinc-400">
+                Report incidents: <strong className="text-cyan-400 font-mono">1930</strong> or <strong className="text-white">cybercrime.gov.in</strong>
+              </div>
+
+              {selectedArticle.sourceUrl && (
+                <a
+                  href={selectedArticle.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition"
+                >
+                  <span>Visit Official Source</span>
+                  <ExternalLink size={13} />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

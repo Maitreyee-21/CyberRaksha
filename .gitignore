@@ -21,6 +21,7 @@ out/
 # Build
 *.log
 dist/
+*.tsbuildinfo
 
 # OS / editor
 .DS_Store

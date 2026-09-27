@@ -493,20 +493,24 @@ export function GuidancePanel({
           </div>
 
           <div className="space-y-2">
-            {stepsList.map((step, index) => (
-              <div
-                key={`${step}-${index}`}
-                className="flex items-start gap-3 rounded-xl border border-[#e2e7dd] bg-[#f7faf5] p-3"
-              >
-                <span className="w-6 h-6 rounded-full bg-[#dfead6] text-[#55733d] flex items-center justify-center text-[10px] font-black shrink-0">
-                  {index + 1}
-                </span>
+            {stepsList.map((step, index) => {
+              // Strip any leading numbers such as "1. ", "Step 1: ", etc.
+              const cleanStep = step.replace(/^(\d+[\.\-\)]\s*|step\s*\d+[:\.\-]?\s*)/i, '');
+              return (
+                <div
+                  key={`${step}-${index}`}
+                  className="flex items-start gap-3 rounded-xl border border-[#e2e7dd] bg-[#f7faf5] p-3"
+                >
+                  <span className="w-6 h-6 rounded-full bg-[#dfead6] text-[#55733d] flex items-center justify-center shrink-0 mt-0.5">
+                    <ShieldCheck size={14} className="text-[#55733d]" />
+                  </span>
 
-                <span className="text-sm leading-5 text-[#485249]">
-                  {step}
-                </span>
-              </div>
-            ))}
+                  <span className="text-sm leading-5 text-[#485249]">
+                    {cleanStep}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
           {stepsList.length === 0 && (
